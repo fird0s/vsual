@@ -1,14 +1,13 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
+<meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Vsual</title>
-<meta name="author" content="Pixelo">
-<meta name="description" content="">
-<meta name="keywords" content="">
+<title> Author Login | {{ env('TITLE') }} </title>
+<meta name="author" content="{{ env('AUTHOR') }}">
+<meta name="description" content="{{ env('DESCRIPTION') }}">
+<meta name="keywords" content="{{ env('KEYWORD') }}">
 
 <!-- CSS Files -->
 <link href="{{ asset('assets/customer/css/main.css') }}" rel="stylesheet">
@@ -19,24 +18,23 @@
 	<div class="container">
 	    <div class="row">
 		    <div class="col-md-12">
-                <div class="site-logo"><a href="http://localhost:8080/index" class="logo-text">Vsual</a></div><!-- .site-logo -->
-				<nav class="site-navigation">
-					<div class="menu-container">
-						<ul class="nav-menu">
-						    <li class="menu-item"><a href="#">Shop</a></li>
-							<li class="menu-item"><a href="http://localhost:8080/membership">Membership</a></li>
-							<li class="menu-item"><a href="http://localhost:8080/about">About</a></li>
-							<li class="menu-item"><a href="#">Support</a></li>
-						</ul><!-- .nav-menu -->
-					</div>
-				</nav><!-- .site-navigation -->
+                <div class="site-logo"><a href="{{ route('home') }}" class="logo-text">Vsual</a></div><!-- .site-logo -->
+                <nav class="site-navigation">
+                    <div class="menu-container">
+                        <ul class="nav-menu">
+                            <li class="menu-item"><a href="{{ route('home') }}">Home</a></li>
+                            <li class="menu-item"><a href="{{ route('page_membership') }}">Membership</a></li>
+                            <li class="menu-item"><a href="{{ route('page_about_us') }}">About</a></li>
+                            <li class="menu-item"><a href="{{ route('page_license') }}">License</a></li>
+                        </ul><!-- .nav-menu -->
+                    </div>
+                </nav><!-- .site-navigation -->
 
                 <nav class="site-navigation user-nav">
 				    <div class="menu-container">
 					    <ul class="nav-menu">
-													<li class="menu-item"><a href="http://localhost:8080/buyer/login">Login</a></li>
-
-												</ul><!-- .nav-menu -->
+                                                        <li class="menu-item"><a href="{{ route('subscriber_login') }}">Login</a></li>
+                        </ul><!-- .nav-menu -->
 					</div>
 				</nav><!-- .user-navigation -->
 
@@ -61,7 +59,7 @@
     <div class="row">
         <div class="col-md-8 col-md-offset-2">
             <div class="panel panel-default"><br>
-                <div class="panel-heading">Login</div>        
+                <div class="panel-heading">Login (Author) </div>        
                 <div class="panel-body">
                 	@if (Session::has('success'))
 			        <div class="alert alert-success">
@@ -78,22 +76,25 @@
 
                         <div class="form-group">
                             <label class="col-md-4 control-label">E-Mail Address</label>
-
                             <div class="col-md-6">
                                 <input type="email" class="form-control" name="email" value="">
-
-                                                            </div>
+                            </div>
                         </div>
 
                         <div class="form-group">
                             <label class="col-md-4 control-label">Password</label>
-
                             <div class="col-md-6">
                                 <input type="password" class="form-control" name="password">
-
-                                                            </div>
+                            </div>
                         </div>
 
+
+
+                        <div class="col-md-8 col-md-offset-4">
+                                Don't have Author Account ? <a href="{{ route('author_register') }}"><b>Sing Up here</b></a>
+                         </div>
+
+                         <div class="clear"></div><br>
 
                         <div class="form-group">
                             <div class="col-md-6 col-md-offset-4">

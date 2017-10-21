@@ -1,17 +1,26 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
+<meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Vsual</title>
-<meta name="author" content="Pixelo">
-<meta name="description" content="">
-<meta name="keywords" content="">
+<title> Account List Product - {{ env('TITLE') }} </title>
+<meta name="author" content="{{ env('AUTHOR') }}">
+<meta name="description" content="{{ env('DESCRIPTION') }}">
+<meta name="keywords" content="{{ env('KEYWORD') }}">
 
 <!-- CSS Files -->
 <link href="{{ asset('assets/customer/css/main.css') }}" rel="stylesheet">
+
+<style type="text/css">
+.btn-danger {
+    color: #fff;
+    background-color: #d9534f;
+    border-color: #d43f3a;
+}
+
+</style>
+
 </head>
 </body>
     <div class="wrapper">
@@ -19,24 +28,24 @@
 	<div class="container">
 	    <div class="row">
 		    <div class="col-md-12">
-                <div class="site-logo"><a href="http://localhost:8080/index" class="logo-text">Vsual</a></div><!-- .site-logo -->
-				<nav class="site-navigation">
-					<div class="menu-container">
-						<ul class="nav-menu">
-						    <li class="menu-item"><a href="#">Shop</a></li>
-							<li class="menu-item"><a href="http://localhost:8080/membership">Membership</a></li>
-							<li class="menu-item"><a href="http://localhost:8080/about">About</a></li>
-							<li class="menu-item"><a href="#">Support</a></li>
-						</ul><!-- .nav-menu -->
-					</div>
-				</nav><!-- .site-navigation -->
+                <div class="site-logo"><a href="{{ route('home') }}" class="logo-text">Vsual</a></div><!-- .site-logo -->
+                <nav class="site-navigation">
+                    <div class="menu-container">
+                        <ul class="nav-menu">
+                            <li class="menu-item"><a href="{{ route('home') }}">Home</a></li>
+                            <li class="menu-item"><a href="{{ route('page_membership') }}">Membership</a></li>
+                            <li class="menu-item"><a href="{{ route('page_about_us') }}">About</a></li>
+                            <li class="menu-item"><a href="{{ route('page_license') }}">License</a></li>
+                        </ul><!-- .nav-menu -->
+                    </div>
+                </nav><!-- .site-navigation -->
 
                 <nav class="site-navigation user-nav">
 				    <div class="menu-container">
 					    <ul class="nav-menu">
-													<li class="menu-item"><a href="http://localhost:8080/buyer/login">Login</a></li>
-
-												</ul><!-- .nav-menu -->
+					    	<li class="menu-item"><a href="{{ route('author_profile') }}">Account</a></li>
+							<li class="menu-item"><a href="{{ route('author_logout') }}">Logout</a></li>
+						</ul><!-- .nav-menu -->
 					</div>
 				</nav><!-- .user-navigation -->
 
@@ -63,14 +72,13 @@
 					<div class="col-md-12">
 						<div class="account-menu-container">
 							<ul class="nav-menu">
-								<li class="menu-item"><a href="#">Profile</a></li>
-								<li class="menu-item"><a href="#">Change Password</a></li>
+								<li class="menu-item"><a href="{{ route('author_profile') }}">Profile</a></li>
+								<li class="menu-item"><a href="{{ route('author_change_pwd') }}">Change Password</a></li>
 								<li class="menu-item">|</li>
-								<li class="menu-item"><a href="#">List Product</a></li>
-								<li class="menu-item"><a href="#">Add Product</a></li>
+								<li class="menu-item"><a href="{{ route('author_list_product') }}">List Product</a></li>
+								<li class="menu-item"><a href="{{ route('author_add_product') }}">Add Product</a></li>
 								<li class="menu-item">|</li>
-								<li class="menu-item"><a href="#">Reports</a></li>
-
+								<li class="menu-item"><a href="{{ route('author_report') }}">Reports</a></li>
 							</ul><!-- .nav-menu -->
 						</div>				
 					</div>
@@ -80,34 +88,45 @@
 	<div class="container">
 	<div class="content-inner checkout-account p-60">
 	<div class="row vertical-divider">
+		@if (Session::has('success'))
+        <div class="alert alert-success">
+          {{Session::get('success')}}
+        </div>
+        @endif
+        @if (Session::has('error'))
+        <div class="alert alert-danger">
+          {{Session::get('error')}}
+        </div>
+        @endif
 	<div class="">
 	<div class="formden_header">
 		<h3 class="v-title">List Products</h3>
 	</div>
 	<div class="create-account">
 
-		<table class="table table-order">
-                                <thead>
-                                    <tr>
-                                        <th><b>Product</b></th>
-                                        <th><b>Date Add</b></th>
-                                        <th class="viewer_account"><b>Viewer</b></th>
-                                        <th class="center"><b>Action</b></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                  <tr id="">
-                                    
-                                     <td><a target="blank" href="">asda</a></td>
-                                     <td>Rp.asdsadas</td>
-                                     <td class="viewer_account">100</td>
-                                     <td class="actions center">
-                                            <a href="" data-toggle="tooltip" title="Ubah" href="#" class="btn btn-primary btn-mini fa fa-gear"> edit</a>
-                                            <a href="" onclick="return confirm('Apakah Anda yakin ingin menghapus?');" data-effect="mfp-move-from-top" data-id="" data-toggle="tooltip" title="Hapus"  class="btn btn-danger btn-mini fa fa-trash-o"> delete</a>
-                                      </td>
-                                  </tr>
-                                 </tbody>
-                       </table>
+		<table class="table table-striped ">
+                <thead>
+                    <tr>
+                        <th><b>Product</b></th>
+                        <th><b>Date Add</b></th>
+                        <th class="center"><b>Viewer</b></th>
+                        <th class="center"><b>Action</b></th>
+                    </tr>
+                </thead>
+                <tbody>
+                  @foreach ($products as $data)		
+                  <tr>
+                     <td><a target="blank" href="">{{ $data->title }}</a></td>
+                     <td>{{ date('d F Y', strtotime($data->created_at)) }}</td>
+                     <td class="center viewer_account">{{ $data->viewer }}</td>
+                     <td class="actions center">
+                        <a href="{{ route('author_edit_product', ['id' => $data->id]) }}" data-toggle="tooltip" title="Change" class="btn btn-primary fa fa-gear" > edit</a>
+                        <a href="{{ route('author_delete_product', ['id' => $data->id]) }}" onclick="return confirm('Are you sure want to delete?');" data-toggle="tooltip" title="Delete"  class="btn btn-danger btn-mini fa fa-trash-o"> delete</a>
+                      </td>
+                  </tr>
+                  @endforeach
+                 </tbody>
+       </table>
 
 	</div>
 

@@ -1,14 +1,13 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
+<meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Vsual</title>
-<meta name="author" content="Pixelo">
-<meta name="description" content="">
-<meta name="keywords" content="">
+<title> Author Change Password | {{ env('TITLE') }} </title>
+<meta name="author" content="{{ env('AUTHOR') }}">
+<meta name="description" content="{{ env('DESCRIPTION') }}">
+<meta name="keywords" content="{{ env('KEYWORD') }}">
 
 <!-- CSS Files -->
 <link href="{{ asset('assets/customer/css/main.css') }}" rel="stylesheet">
@@ -19,24 +18,24 @@
 	<div class="container">
 	    <div class="row">
 		    <div class="col-md-12">
-                <div class="site-logo"><a href="http://localhost:8080/index" class="logo-text">Vsual</a></div><!-- .site-logo -->
-				<nav class="site-navigation">
-					<div class="menu-container">
-						<ul class="nav-menu">
-						    <li class="menu-item"><a href="#">Shop</a></li>
-							<li class="menu-item"><a href="http://localhost:8080/membership">Membership</a></li>
-							<li class="menu-item"><a href="http://localhost:8080/about">About</a></li>
-							<li class="menu-item"><a href="#">Support</a></li>
-						</ul><!-- .nav-menu -->
-					</div>
-				</nav><!-- .site-navigation -->
+                <div class="site-logo"><a href="{{ route('home') }}" class="logo-text">Vsual</a></div><!-- .site-logo -->
+                <nav class="site-navigation">
+                    <div class="menu-container">
+                        <ul class="nav-menu">
+                            <li class="menu-item"><a href="{{ route('home') }}">Home</a></li>
+                            <li class="menu-item"><a href="{{ route('page_membership') }}">Membership</a></li>
+                            <li class="menu-item"><a href="{{ route('page_about_us') }}">About</a></li>
+                            <li class="menu-item"><a href="{{ route('page_license') }}">License</a></li>
+                        </ul><!-- .nav-menu -->
+                    </div>
+                </nav><!-- .site-navigation -->
 
                 <nav class="site-navigation user-nav">
 				    <div class="menu-container">
 					    <ul class="nav-menu">
-													<li class="menu-item"><a href="http://localhost:8080/buyer/login">Login</a></li>
-
-												</ul><!-- .nav-menu -->
+					    	<li class="menu-item"><a href="{{ route('author_profile') }}">Account</a></li>
+							<li class="menu-item"><a href="{{ route('author_logout') }}">Logout</a></li>
+						</ul><!-- .nav-menu -->
 					</div>
 				</nav><!-- .user-navigation -->
 
@@ -63,14 +62,13 @@
 					<div class="col-md-12">
 						<div class="account-menu-container">
 							<ul class="nav-menu">
-								<li class="menu-item"><a href="#">Profile</a></li>
-								<li class="menu-item"><a href="#">Change Password</a></li>
+								<li class="menu-item"><a href="{{ route('author_profile') }}">Profile</a></li>
+								<li class="menu-item"><a href="{{ route('author_change_pwd') }}">Change Password</a></li>
 								<li class="menu-item">|</li>
-								<li class="menu-item"><a href="#">List Product</a></li>
-								<li class="menu-item"><a href="#">Add Product</a></li>
+								<li class="menu-item"><a href="{{ route('author_list_product') }}">List Product</a></li>
+								<li class="menu-item"><a href="{{ route('author_add_product') }}">Add Product</a></li>
 								<li class="menu-item">|</li>
-								<li class="menu-item"><a href="#">Reports</a></li>
-
+								<li class="menu-item"><a href="{{ route('author_report') }}">Reports</a></li>
 							</ul><!-- .nav-menu -->
 						</div>				
 					</div>
@@ -90,6 +88,17 @@
           {{Session::get('error')}}
         </div>
         @endif	
+
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif  
+
 	<div class="col-md-6 col-sm-6 col-xs-12 padding-right">
 	<div class="formden_header">
 		<h3 class="v-title">Change Password</h3>
@@ -106,7 +115,7 @@
 					Current Password<span class="asteriskField">*</span>
 				</label>
 				<input class="form-control" id="password" name="current_password" type="password"/>
-							</div>
+			</div>
 
 			<!-- new password -->
 			<div class="form-group form-row">
@@ -114,7 +123,7 @@
 					New Password<span class="asteriskField">*</span>
 				</label>
 				<input class="form-control" id="password-confirm" name="new_password" type="password"/>
-							</div>
+			</div>
 
 			<!-- Confirm password -->
 			<div class="form-group form-row">
@@ -122,19 +131,16 @@
 					Re-New Password<span class="asteriskField">*</span>
 				</label>
 				<input class="form-control" id="password-confirm" name="re_new_password" type="password"/>
-							</div>
-
+			</div>
 			
 			<div class="form-group">
 
 				<div class="">
 					<button type="submit" class="btn btn-primary">
-						<i class="fa fa-btn fa-user"></i> Change Password
+						<i class="fa fa-btn fa-lock"></i> Change Password
 					</button>
 				</div>
 			</div>
-
-
 		</form>
 	</div>
 

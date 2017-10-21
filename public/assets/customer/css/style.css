@@ -91,6 +91,12 @@ a:focus {
 	text-decoration: none;
 }
 
+.center {
+	text-align: center;
+
+}
+
+
 b,
 strong {
 	font-weight: 700;
@@ -408,8 +414,10 @@ textarea:focus {
 input[type="checkbox"],
 input[type="radio"] {
 	cursor: pointer;
-	padding: 0;
+	padding: 4px;
 }
+
+
 
 .btn,
 button,

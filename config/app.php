@@ -2,34 +2,6 @@
 
 return [
 
-    /*
-    |--------------------------------------------------------------------------
-    | META TAG
-    |--------------------------------------------------------------------------
-    |
-    | This value is the name of meta html tag. This value is used to make easy
-    call everything in viewer. Added by Fird0s.
-    */
-
-    'title' => 'VSUAL',
-    'description' => 'desc',
-    'author' => 'author',
-    'keyword' => 'keyword',
-    'tag_line' => 'tagline',
-    'phone' => 'phone',
-    'google_analitys' => 'google_analitycs',
-    'address' => 'address',
-   
-    // social media
-    'email' => 'firdauskoder@gmail.com',
-    
-    'fb' => 'https://www.facebook.com/marketingdiff',
-    'twitter' => 'https://twitter.com/marketingdiff_',
-    'gplus' => 'https://plus.google.com/117061665851714812544',
-    'feed' => 'https://plus.google.com/',
-    'pinterest' => 'https://id.pinterest.com/marketingdiff/',
-    /*
-
 
     /*
     |--------------------------------------------------------------------------
@@ -206,6 +178,9 @@ return [
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
 
+        // add by fird0s
+        Aws\Laravel\AwsServiceProvider::class,
+
     ],
 
     /*
@@ -254,6 +229,9 @@ return [
         'URL' => Illuminate\Support\Facades\URL::class,
         'Validator' => Illuminate\Support\Facades\Validator::class,
         'View' => Illuminate\Support\Facades\View::class,
+
+        // add by fird0s
+        'AWS' => Aws\Laravel\AwsFacade::class,
 
     ],
 

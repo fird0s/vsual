@@ -1,18 +1,20 @@
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="utf-8">
+<meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Vsual</title>
-<meta name="author" content="Pixelo">
-<meta name="description" content="">
-<meta name="keywords" content="">
+<title>{{ env('TITLE') }} - {{ env('TAG_LINE') }} </title>
+<meta name="author" content="{{ env('AUTHOR') }}">
+<meta name="description" content="{{ env('DESCRIPTION') }}">
+<meta name="keywords" content="{{ env('KEYWORD') }}">
 
 <!-- CSS Files -->
 <link href="{{ asset('assets/customer/css/main.css') }}" rel="stylesheet">
 <link href="{{ asset('assets/customer/css/bootstrap-tagsinput.css') }}" rel="stylesheet">
+
 </head>
 </body>
     <div class="wrapper">
@@ -20,24 +22,24 @@
 	<div class="container">
 	    <div class="row">
 		    <div class="col-md-12">
-                <div class="site-logo"><a href="http://localhost:8080/index" class="logo-text">Vsual</a></div><!-- .site-logo -->
-				<nav class="site-navigation">
-					<div class="menu-container">
-						<ul class="nav-menu">
-						    <li class="menu-item"><a href="#">Shop</a></li>
-							<li class="menu-item"><a href="http://localhost:8080/membership">Membership</a></li>
-							<li class="menu-item"><a href="http://localhost:8080/about">About</a></li>
-							<li class="menu-item"><a href="#">Support</a></li>
-						</ul><!-- .nav-menu -->
-					</div>
-				</nav><!-- .site-navigation -->
+                <div class="site-logo"><a href="{{ route('home') }}" class="logo-text">Vsual</a></div><!-- .site-logo -->
+                <nav class="site-navigation">
+                    <div class="menu-container">
+                        <ul class="nav-menu">
+                            <li class="menu-item"><a href="{{ route('home') }}">Home</a></li>
+                            <li class="menu-item"><a href="{{ route('page_membership') }}">Membership</a></li>
+                            <li class="menu-item"><a href="{{ route('page_about_us') }}">About</a></li>
+                            <li class="menu-item"><a href="{{ route('page_license') }}">License</a></li>
+                        </ul><!-- .nav-menu -->
+                    </div>
+                </nav><!-- .site-navigation -->
 
                 <nav class="site-navigation user-nav">
 				    <div class="menu-container">
 					    <ul class="nav-menu">
-													<li class="menu-item"><a href="http://localhost:8080/buyer/login">Login</a></li>
-
-												</ul><!-- .nav-menu -->
+					    	<li class="menu-item"><a href="{{ route('author_profile') }}">Account</a></li>
+							<li class="menu-item"><a href="{{ route('author_logout') }}">Logout</a></li>
+						</ul><!-- .nav-menu -->
 					</div>
 				</nav><!-- .user-navigation -->
 
@@ -64,14 +66,13 @@
 					<div class="col-md-12">
 						<div class="account-menu-container">
 							<ul class="nav-menu">
-								<li class="menu-item"><a href="#">Profile</a></li>
-								<li class="menu-item"><a href="#">Change Password</a></li>
+								<li class="menu-item"><a href="{{ route('author_profile') }}">Profile</a></li>
+								<li class="menu-item"><a href="{{ route('author_change_pwd') }}">Change Password</a></li>
 								<li class="menu-item">|</li>
-								<li class="menu-item"><a href="#">List Product</a></li>
-								<li class="menu-item"><a href="#">Add Product</a></li>
+								<li class="menu-item"><a href="{{ route('author_list_product') }}">List Product</a></li>
+								<li class="menu-item"><a href="{{ route('author_add_product') }}">Add Product</a></li>
 								<li class="menu-item">|</li>
-								<li class="menu-item"><a href="#">Reports</a></li>
-
+								<li class="menu-item"><a href="{{ route('author_report') }}">Reports</a></li>
 							</ul><!-- .nav-menu -->
 						</div>				
 					</div>
@@ -81,42 +82,51 @@
 	<div class="container">
 	<div class="content-inner checkout-account p-60">
 	<div class="row vertical-divider">
+		@if (Session::has('success'))
+        <div class="alert alert-success">
+          {{Session::get('success')}}
+        </div>
+        @endif
+        @if (Session::has('error'))
+        <div class="alert alert-danger">
+          {{Session::get('error')}}
+        </div>
+        @endif
+
+         @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif  
 	<div class="">
 	<div class="formden_header">
 		<h3 class="v-title">Add Product</h3>
 	</div>
 	<div class="create-account">
-	<form class="" role="form" method="POST" action="" enctype="multipart/form-data">
+	<form role="form" method="POST" action="{{ route('author_add_product') }}" enctype="multipart/form-data">
         <input type="hidden" name="_token" value="{{{ csrf_token() }}}" />
 
-		<div class="row">
-			<div class="col-md-6">
-				<div class="form-group form-row">
-					<label class="control-label requiredField" for="title">
-					Title <span class="asteriskField">*</span></label>
-					<input class="form-control" id="title" name="title" type="text">
-				</div>
-			</div>
+        <div class="form-group form-row">
+			<label class="control-label Field" for="title">
+			Title <span class="asteriskField">*</span></label>
+			<input class="form-control" id="title" name="title" type="text" required>
+		</div>
 
-			<div class="col-md-6">
-				<div class="form-group form-row">
-					<label class="control-label requiredField" for="item_type">
-					Item Type <span class="asteriskField">*</span></label>
-					<input class="form-control" id="item_type" name="item_type" type="text">
-				</div>
-
-			</div>
-		</div>	
+		
 
 		<div class="form-group form-row">
-			<label class="control-label requiredField" for="tag_line">
-			Tag Line <span class="asteriskField">*</span></label>
+			<label class="control-label Field" for="tag_line">
+			Tag Line <span class="asteriskField"></span></label>
 			<input class="form-control" id="tag_line" name="tag_line" type="text">
 		</div>
 
 
 		<div class="form-group form-row">
-			<label class="control-label requiredField" for="categories">
+			<label class="control-label Field" for="categories">
 			Categories <span class="asteriskField">*</span></label>
 			<select class="form-control" name="category">
 			  @foreach ($category as $data)
@@ -130,17 +140,17 @@
 		<div class="row">
 			<div class="col-md-6">
 				<div class="form-group form-row" style="border: 1px dotted gray; padding: 10px;">
-					<label class="control-label requiredField">
+					<label class="control-label Field">
 					<b>Cover Image - Aspect Ration 3:2 - MIN: 1170x780 - MAX: 20MB (JPEG, PNG, SVG)</b> <span class="asteriskField">*</span></label>
-					<input type="file" name="cover_image">
+					<input type="file" name="cover_image" required>
 				</div>
 			</div>
 
 			<div class="col-md-6">
 				<div class="form-group form-row" style="border: 1px dotted gray; padding: 22px;">
-					<label class="control-label requiredField" for="zip_file">
+					<label class="control-label Field" for="zip_file">
 					<b>Upload Item ZIP</b> <span class="asteriskField">*</span></label>
-					<input type="file" name="zip_file" width="100%">
+					<input type="file" name="zip_file" width="100%" required>
 				</div>
 			</div>
 		</div>
@@ -150,22 +160,22 @@
 			<label style="padding-left: 10px;"> <b>Preview Images - Aspect Ration 3:2 - MIN: 570x380 - MAX: 5MB (JPEG, PNG, SVG)</b>	 </label></br>
 			<div class="col-md-3">
 				<div class="form-group form-row">
-					<input type="file" name="preview_image_1" width="100%">
+					<input type="file" name="preview_image_1" width="100%" >
 				</div>
 			</div>
 			<div class="col-md-3">
 				<div class="form-group form-row">
-					<input type="file" name="preview_image_2" width="100%">
+					<input type="file" name="preview_image_2" width="100%" >
 				</div>
 			</div>
 			<div class="col-md-3">
 				<div class="form-group form-row">
-					<input type="file" name="preview_image_3" width="100%">
+					<input type="file" name="preview_image_3" width="100%" >
 				</div>
 			</div>
 			<div class="col-md-3">
 				<div class="form-group form-row">
-					<input type="file" name="preview_image_4" width="100%">
+					<input type="file" name="preview_image_4" width="100%" >
 				</div>
 			</div>
 		</div>		
@@ -178,18 +188,18 @@
 		<div class="row">
 			<div class="col-md-6">
 				<div class="form-group form-row">
-					<label class="control-label requiredField" for="file_type">
-					File Type <span class="asteriskField"></span></label>
+					<label class="control-label Field" for="file_type">
+					File Type <span class="asteriskField">*</span></label>
 
-					<input class="form-control" id="file_type" name="file_type" type="text" data-role="tagsinput">
+					<input class="form-control" id="file_type" name="file_type" type="text" required>
 				</div>
 			</div>
 
 			<div class="col-md-6">
 				<div class="form-group form-row">
-					<label class="control-label requiredField" for="requirements">
-					Requirements <span class="asteriskField"></span></label>
-					<input class="form-control" id="requirements" name="requirements" type="text">
+					<label class="control-label Field" for="requirements">
+					Requirements <span class="asteriskField">*</span></label>
+					<input class="form-control" id="requirements" name="requirements" type="text" required>
 				</div>
 
 			</div>
@@ -197,18 +207,18 @@
 
 		<!-- tag -->
 		<div class="form-group form-row">
-					<label class="control-label requiredField" for="tag">
+					<label class="control-label Field" for="tag">
 					Tag <span class="asteriskField"></span></label>
-					<input class="form-control" id="tag" name="tag" type="text">
+					<input class="form-control" id="tag" name="tag" type="text" >
 		</div>
 
 
 		<!-- text area  -->
 		<label><b>Description</b></label>
-		<textarea name="description" rows="6" maxlength="1000" class="form-control ckeditor"></textarea>
+		<textarea name="description" rows="6" maxlength="1000" class="form-control ckeditor" required></textarea>
 
 		<br>
-		<button type="submit" class="btn btn-primary">Add Project</button>
+		<button type="submit" class="btn btn-primary">Add Product</button>
 
 		</div>
 
@@ -310,7 +320,18 @@
     <script src="{{ asset('assets/customer/js/jquery.min.js') }}"></script>
     <script src="{{ asset('assets/customer/js/bootstrap.min.js') }}"></script>
     <script src="{{ asset('assets/customer/js/owl.carousel.js') }}"></script>
-    <script src="{{ asset('assets/customer/js/bootstrap-tagsinput.js') }}"></script>
+    <script src="{{ asset('assets/admin/ckeditor/ckeditor.js') }}" ></script>
+
+    <script type="text/javascript">
+    $(document).ready(function() {
+	   $(window).keydown(function(event){
+	     if(event.keyCode == 13) {
+	       event.preventDefault();
+	       return false;
+	     }
+	   });
+	 });
+    </script>
 
 </body>
 </html>

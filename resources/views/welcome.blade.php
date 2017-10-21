@@ -1,14 +1,13 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Vsual</title>
-<meta name="author" content="Pixelo">
-<meta name="description" content="">
-<meta name="keywords" content="">
+<title> {{ env('TITLE') }} - {{ env('TAG_LINE') }} </title>
+<meta name="author" content="{{ env('AUTHOR') }}">
+<meta name="description" content="{{ env('DESCRIPTION') }}">
+<meta name="keywords" content="{{ env('KEYWORD') }}">
 
 <!-- CSS Files -->
 <link href="{{ asset('assets/customer/css/main.css') }}" rel="stylesheet">
@@ -19,14 +18,14 @@
     <div class="container">
         <div class="row">
             <div class="col-md-12">
-                <div class="site-logo"><a href="http://localhost:8000/index" class="logo-text">Vsual</a></div><!-- .site-logo -->
+                <div class="site-logo"><a href="{{ route('home') }}" class="logo-text">Vsual</a></div><!-- .site-logo -->
                 <nav class="site-navigation">
                     <div class="menu-container">
                         <ul class="nav-menu">
-                            <li class="menu-item"><a href="#">Home</a></li>
-                            <li class="menu-item"><a href="http://localhost:8000/membership">Membership</a></li>
-                            <li class="menu-item"><a href="http://localhost:8000/about">About</a></li>
-                            <li class="menu-item"><a href="#">Support</a></li>
+                            <li class="menu-item"><a href="{{ route('home') }}">Home</a></li>
+                            <li class="menu-item"><a href="{{ route('page_membership') }}">Membership</a></li>
+                            <li class="menu-item"><a href="{{ route('page_about_us') }}">About</a></li>
+                            <li class="menu-item"><a href="{{ route('page_license') }}">License</a></li>
                         </ul><!-- .nav-menu -->
                     </div>
                 </nav><!-- .site-navigation -->
@@ -34,9 +33,15 @@
                 <nav class="site-navigation user-nav">
                     <div class="menu-container">
                         <ul class="nav-menu">
-                                                    <li class="menu-item"><a href="http://localhost:8000/buyer/login">Login</a></li>
+                            @if(Auth::guest())
+                            <li class="menu-item"><a href="{{ route('subscriber_login') }}">Login</a></li>
 
-                                                </ul><!-- .nav-menu -->
+                            @else
+                            <li class="menu-item"><a href="{{ route('subscriber_account') }}">Hi, {{Auth::user()->name}}</a></li>
+                            <li class="menu-item"><a href="{{ route('subscriber_logout') }}">Logout</a></li>
+
+                            @endif
+                        </ul><!-- .nav-menu -->
                     </div>
                 </nav><!-- .user-navigation -->
 
@@ -85,7 +90,32 @@
         <div class="container">
             <div class="content-inner product">
                 <div class="row">
-                            <div class="row">
+
+                    <!-- Looping Product -->
+                    @foreach ($products as $data)       
+                    <div class="col-md-4">
+                        <div class="product-item">
+                          <figure class="product-thumb">
+                            <a href="{{ route('view_product', ['slug_url' => $data->slug_url]) }}">
+                              <img src="{{ Storage::url('cover_image/') }}{{ $data->cover_image}}" style="height: 200px;">
+                            </a>
+
+                          </figure>
+                          <div class="product-body">
+                            <div class="product-title">
+                              <a href="{{ route('view_product', ['slug_url' => $data->slug_url]) }}">{{ str_limit($data->title, $limit = 35, $end = '...') }}</a>
+                            </div>
+                            <div class="product-meta">
+                              <span class="product-cat"><a href="{{ route('category', ['category_slug' => $data->slug_name]) }}">{{ $data->name }}</a></span>
+                              <span class="product-date">{{ date("M d, Y", strtotime("$data->created_at")) }} </span>
+                            </div>
+                          </div>
+                        </div>
+                    </div>  
+                    @endforeach  
+
+
+                    <div class="row">
                         <div class="col-md-12">
                             <nav role="navigation">
                                 <ul class="vs-pagination">
