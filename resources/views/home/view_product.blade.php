@@ -329,7 +329,7 @@
 
     <script type="text/javascript">
         $(".record").click(function(){
-            $.get( "/download/{{ $product->zip_file}}", function( data ) {
+            $.get( "/download/{{ $product->slug_url}}", function( data ) {
               console.log(data);
             });
         });

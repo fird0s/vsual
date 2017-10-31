@@ -15,7 +15,7 @@ class HomeController extends Controller
         if (Auth::user()){
             $user = DB::table('users')->where('id', Auth::user()->id)->first();  
             $product = DB::table('author_product')->where('slug_url', $slug_url)->first();  
-            if ($product && $user->subscription_type == 2){
+            if ($product->free == 0 && $user->subscription_type == 2){
                 $current_download = DB::table('users_download')
                     ->where('subscription_id', $user->subscription_id)
                     ->where('product_id', $product->id)
@@ -32,9 +32,15 @@ class HomeController extends Controller
                 }else{
                     return "Subscriber already downloaded the product";
                 }
+
+            }elseif ($product->free == 1 && $user->subscription_type == 2) {
+                return "product is free";
             }else {
                 return "false";
             }
+
+        }else{
+            return redirect()->route('subscriber_login');
         }
 
     }
@@ -64,22 +70,43 @@ class HomeController extends Controller
     public function index(Request $request)
     {
 
-        if (Auth::attempt(['email' => 'firdauskoder@gmail.com', 'password' => '123456'])) {
-            // Authentication passed...
-            return 'fuck';
-        }
 
     	$products = DB::table('author_product')
             ->join('product_categories', 'author_product.category', '=', 'product_categories.id')
             ->select('author_product.id', 'author_product.cover_image', 'author_product.title', 'author_product.created_at', 'author_product.slug_url', 'product_categories.name', 'product_categories.slug_name')
             ->orderBy('id', 'dsc')
-            ->paginate(10);
+            ->paginate(15);
 	
 
     	// $products = DB::table('author_product')->where('status', 1)->orderBy('id', 'dsc')->paginate(10);
 
 
         return view('welcome', compact('products'));
+    }
+
+    public function product_popular(Request $request)
+    {
+
+        $products = DB::table('author_product')
+            ->join('product_categories', 'author_product.category', '=', 'product_categories.id')
+            ->select('author_product.viewer', 'author_product.id', 'author_product.cover_image', 'author_product.title', 'author_product.created_at', 'author_product.slug_url', 'product_categories.name', 'product_categories.slug_name')
+            ->orderBy('author_product.viewer', 'dsc')
+            ->paginate(15);
+
+        return view('home/popular', compact('products'));    
+    }
+
+    public function product_free(Request $request)
+    {
+        $products = DB::table('author_product')
+            ->join('product_categories', 'author_product.category', '=', 'product_categories.id')
+            ->select('author_product.free', 'author_product.id', 'author_product.cover_image', 'author_product.title', 'author_product.created_at', 'author_product.slug_url', 'product_categories.name', 'product_categories.slug_name')
+            ->where('author_product.free', '=', 1)
+            ->orderBy('author_product.created_at', 'dsc')
+            ->paginate(15);
+
+        return view('home/product_free', compact('products'));    
+
     }
 
 
@@ -93,7 +120,7 @@ class HomeController extends Controller
             ->select('author_product.id', 'author_product.cover_image', 'author_product.title', 'author_product.created_at', 'author_product.slug_url', 'product_categories.name', 'product_categories.slug_name')
             ->where('category', $category->id)
             ->orderBy('id', 'dsc')
-            ->paginate(10);
+            ->paginate(15);
 
     	// $products = DB::table('author_product')->where('status', 1)->orderBy('id', 'dsc')->paginate(10);
 

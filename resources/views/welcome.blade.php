@@ -69,9 +69,9 @@
         <div class="account-menu-container">
 
           <ul class="nav-menu">
-            <li class="menu-item"><a href="#">Recent</a></li>
-            <li class="menu-item"><a href="#">Popular</a></li>
-            <li class="menu-item"><a href="#">Free</a></li>
+            <li class="menu-item"><a href="{{ route('home') }}" style='color:black;'>Recent</a></li>
+            <li class="menu-item"><a href="{{ route('product_popular') }}">Popular</a></li>
+            <li class="menu-item"><a href="{{ route('product_free') }}">Free</a></li>
           </ul><!-- .nav-menu -->
 
           <form method="post" class="search-product pull-right">
@@ -118,17 +118,7 @@
                     <div class="row">
                         <div class="col-md-12">
                             <nav role="navigation">
-                                <ul class="vs-pagination">
-                                    <li class="button"><a class="disabled" href="#">Prev</a></li>
-                                    <li><a class="current" href="#">1</a></li>
-                                    <li><a href="#">2</a></li>
-                                    <li><a href="#">3</a></li>
-                                    <li><a href="#">4</a></li>
-                                    <li><span>...</span></li>
-                                    <li><a href="#">20</a></li>
-                                    <li class="button"><a href="#">Next</a></li>
-
-                                </ul>
+                                {{ $products->links() }}
                             </nav>
                         </div>
                     </div>

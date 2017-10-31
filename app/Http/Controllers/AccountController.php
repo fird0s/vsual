@@ -8,6 +8,7 @@ use League\Flysystem\AwsS3v3\AwsS3Adapter;
 use DB;
 use Crypt;
 use Validator;
+use Illuminate\Support\Facades\Hash;
 
 class AccountController extends Controller
 {
@@ -27,22 +28,27 @@ class AccountController extends Controller
         $now = date("Y-m-d");
 
         $subscription = DB::table('users_subscription')
-                        ->where('id', 4)
-                        ->where('status', 1)
+                        ->where('id', 7)
                         ->first();
 
         if ($subscription){                
           $end_subscribtion = date("Y-m-d", strtotime($subscription->subscription_ends_time_stamp));
           if ($now > $end_subscribtion && $subscription->status == 1){
-              DB::table('users_subscription')->where('id', 4)->update([
+              DB::table('users_subscription')->where('id', 7)->update([
                   'status' => 2
                 ]);
               return "change from ongoing to expired";
-          }else{
-              return "false";
+
+          // already calculated and runned calculate_revenue
+          }elseif ($subscription->status == 3){
+              echo "calculated";
+
+          // on goin
+          }elseif ($subscription->status == 1){
+              echo "ongoing";
           }
         }else {
-          echo "no record";
+          echo "norecord";
         }
 
     }
@@ -52,7 +58,7 @@ class AccountController extends Controller
             This function to divided the user subscription with author revenue
         **/
 
-        $subscription = DB::table('users_subscription')->where('id', 4)->first();      
+        $subscription = DB::table('users_subscription')->where('id', 7)->first();      
         $now = date("Y-m-d");
         $end_subscribtion = date("Y-m-d", strtotime($subscription->subscription_ends_time_stamp));
         
@@ -77,19 +83,34 @@ class AccountController extends Controller
               DB::table('author')->where('id', $item['author_id'])->update([
                 'revenue' => $get_author->revenue + $revenue
               ]);
-              
+
+              // insert to author revenue
+              DB::table('author_revenue')->insertGetId([
+                    'revenue' => $revenue,
+                    'subscription_id' => $subscription->id,
+                    'author_id' => $item['author_id']
+              ]);
+
             }
 
-            $subscription = DB::table('users_subscription')->where('id', 4)->update([
+            // to change users subscription status 3 (divided calculated to all author)
+            DB::table('users_subscription')->where('id', 7)->update([
                 'status' => 3
+            ]);
+
+            // if the users end the subscription, subscription_type will change to 1 (free member)
+            DB::table('users')->where('subscription_id', $subscription->id)->update([
+                  'subscription_type' => 1
             ]);
 
             echo "success divided revenue";
 
         }elseif ($now > $end_subscribtion && $subscription->status == 1) {
-            return "ongoing";
+            echo "ongoing";
+        }elseif ($subscription->status == 3) {
+            echo "calculated";    
         }else {
-            return "unknown";
+            echo "unknown or divided";
         }
 
     }    
@@ -125,7 +146,8 @@ class AccountController extends Controller
                    'username' => $request->input('username'),
                    'email' => $request->input('email'),
                    'password' => $request->input('password'),
-                    'remember_token' => str_random()
+                   'revenue' => 0,
+                   'remember_token' => str_random()
             ];
 
             $id = DB::table('author')->insertGetId($register);
@@ -152,11 +174,141 @@ class AccountController extends Controller
 
     public function author_report(Request $request)
     {
+        if (! $request->session()->get('author')){
+            return redirect()->route('author_login');
+        }
         
-        
-        return view('author/report/report');
+        $email = $request->session()->get('author');
+        $author = DB::table('author')->where('email', $email)->first();
+        $downloads = DB::table('users_download')
+            ->join('author_product', 'users_download.product_id', '=', 'author_product.id')
+            ->join('users_subscription', 'users_download.user_id', '=', 'users_subscription.user_id')
+            ->join('users', 'users_download.user_id', '=', 'users.id')
+            ->select('users_download.created_at', 'author_product.title', 'users_subscription.subscription_ends_time_stamp', 'users.name')
+            ->orderBy('users_download.id', 'dsc')
+            ->paginate(10);
+        return view('author/report/report', compact('downloads'));
     }
 
+    public function author_report_withdrawal_request(Request $request)
+    {
+        if (! $request->session()->get('author')){
+            return redirect()->route('author_login');
+        }
+
+        $email = $request->session()->get('author');
+        $author = DB::table('author')->where('email', $email)->first();
+
+
+
+        if ($request->isMethod('post')) {
+          if ($request->input('amount')){
+            if ($request->input('amount') == 'all-request' && $author->revenue > 0) {  
+              DB::table('author_withdrawal')->insertGetId([
+                    'author_id' => $author->id,
+                    'amount' => $author->revenue,
+                    'status' => 1,
+              ]);
+
+              DB::table('author')->where('id', $author->id)->update
+              ([
+                    'revenue' => 0
+              ]);
+              $request->session()->flash('success', 'Your payment request success, our team are reviewing your request');
+              return redirect()->route('author_report_withdrawal');
+
+            }elseif ($request->input('amount') == 'partial-request' && $request->input('amount-partial-request') && $author->revenue > 0) {
+              DB::table('author_withdrawal')->insertGetId([
+                    'author_id' => $author->id,
+                    'amount' => $request->input('amount-partial-request'),
+                    'status' => 1,
+              ]);
+
+              DB::table('author')->where('id', $author->id)->update
+              ([
+                    'revenue' => $author->revenue - $request->input('amount-partial-request')
+              ]);
+              $request->session()->flash('success', 'Your request success, our team are reviewing your request');
+              return redirect()->route('author_report_withdrawal_request');
+            }else {
+              $request->session()->flash('error', 'Your balance not enough to withdraw.');
+              return redirect()->route('author_report_withdrawal_request');
+            }
+
+          }else {
+            $request->session()->flash('error', 'Your revenue not enough to withdraw');
+            return redirect()->route('author_report_withdrawal');
+          }
+        }
+
+        return view('author/report/request_withdrawal', compact('author'));
+    }
+
+    public function author_report_earnings(Request $request)
+    {
+        if (! $request->session()->get('author')){
+            return redirect()->route('author_login');
+        }
+
+        $email = $request->session()->get('author');
+        $author = DB::table('author')->where('email', $email)->first();
+        
+        // total value of sales
+        $total_earnings = DB::table('author_revenue')
+                            ->where('author_id', $author->id)
+                            ->sum('revenue');
+
+        $month_revenue = DB::table('author_revenue')
+                            ->where('author_id', $author->id)                            
+                            ->whereMonth('created_at', '=', date('m'))
+                            ->sum('revenue');
+
+        return view('author/report/earnings', compact('author', 'total_earnings', 'month_revenue'));
+    }
+
+    public function author_report_withdrawal(Request $request)
+    {
+        if (! $request->session()->get('author')){
+            return redirect()->route('author_login');
+        }
+
+        $email = $request->session()->get('author');
+        $author = DB::table('author')->where('email', $email)->first();
+        $withdrawals = DB::table('author_withdrawal')->where('author_id', $author->id)->orderBy('created_at', 'dsc')->get();
+        
+        return view('author/report/withdrawal', compact('withdrawals'));
+    }
+
+
+    public function forgot_password(Request $request)
+    {   
+        if ($request->isMethod('post')) {
+
+             $validator = Validator::make($request->all(), [
+                'email' => 'required|email|max:100',
+            ]);
+
+            if ($validator->fails()) {
+                return redirect()->back()->withErrors($validator)->withInput();
+            }
+
+            $author = DB::table('author')->where('email', $request->input('email'))->first();
+            
+            if ($author){
+
+                // send mail forgot password to user
+                  
+
+            }else {
+                $request->session()->flash('error', 'Email cannot find on the system');
+                return redirect()->route('author_forgot_password');
+            }
+
+        }        
+
+
+        return view('author/forgot_password');
+    }
 
     public function login(Request $request)
     {
@@ -166,8 +318,14 @@ class AccountController extends Controller
 
         if ($request->input('email') && $request->input('password')){
             $author = DB::table('author')->where('email', $request->input('email'))->first();
-            if ($author && $author->password == $request->input('password')){
+            if ($author && Hash::check($request->input('password'), $author->password)) {
                 $request->session()->put("author", $author->email);
+
+                // set last_login
+                DB::table('author')->where('email', $author->email)->update([
+                    'updated_at' => date('Y-m-d H:i:s')
+                ]);
+
                 return redirect()->route('author_profile');
             }else{
                 $request->session()->flash('error', 'Email or password invalid');
@@ -188,9 +346,9 @@ class AccountController extends Controller
         if ($request->isMethod('post')) {
 
             $validator = Validator::make($request->all(), [
-                'name' => 'required|min:4|max:100',
-                'username' => 'required|min:4|max:20',
-                'email' => 'required|email',
+                'name' => 'required|min:5|max:100',
+                'username' => 'required|min:5|max:20|alpha_dash',
+                'email' => 'required|email|unique:author,email,'.$author->id
             ]);
 
             if ($validator->fails()) {
@@ -204,6 +362,7 @@ class AccountController extends Controller
                         'name' => $request->input('name'),
                         'username' => $request->input('username'),
                   ]);
+
                   // session
                   $request->session()->forget('author');
                   $request->session()->put('author', $request->input('email'));
@@ -241,12 +400,14 @@ class AccountController extends Controller
                 return redirect()->route('author_change_pwd')->withErrors($validator);
             }    
 
-            if ($author && $author->password == $request->input('current_password')){
+            if ($author && Hash::check($request->input('current_password'), $author->password) ){
                 DB::table('author')->where('id', $author->id)->update([
-                    'password' => $request->input("new_password")
+                    'password' => Hash::make($request->input("new_password"))
                 ]);
+
                 $request->session()->flash('success', 'Your password changed successfuly');
                 return redirect()->route('author_change_pwd');
+
             }else{
                 $request->session()->flash('error', 'Your current password wrong or invalid');
                 return redirect()->route('author_change_pwd');
@@ -264,7 +425,7 @@ class AccountController extends Controller
 
         $email = $request->session()->get('author');
         $author = DB::table('author')->where('email', $email)->first();
-        $products = DB::table('author_product')->where('author_id', $author->id)->orderBy('id', 'dsc')->paginate(10);
+        $products = DB::table('author_product')->where('author_id', $author->id)->orderBy('created_at', 'dsc')->get();
         return view('author/product/list', compact('products'));
     }
 
@@ -280,13 +441,14 @@ class AccountController extends Controller
         $email = $request->session()->get('author');
         $author = DB::table('author')->where('email', $email)->first();
         $category = DB::table('product_categories')->orderBy('id', 'dsc')->get();
+        $file_type = DB::table('product_file_type')->orderBy('id', 'dsc')->get();
 
         if ($request->isMethod('post')) {
             // $request->input('description') && $request->hasFile('preview_image_4') && $request->hasFile('preview_image_3') && $request->hasFile('preview_image_2') &&  $request->hasFile('preview_image_1') && $request->hasFile('zip_file') && $request->hasFile('cover_image') && $request->input('title') && $request->input('item_type') && $request->input('categories')
 
             $validator = Validator::make($request->all(), [
                 'title' => 'required|max:200',
-                'cover_image' => 'required|image|mimes:jpg,png',
+                'cover_image' => 'required|image|mimes:jpeg,jpg,png',
                 'zip_file' => 'required|mimes:zip',
                 'file_type' => 'required|max:200',
                 'requirements' => 'required|max:200',
@@ -302,14 +464,16 @@ class AccountController extends Controller
                 $add = [
                     'author_id' => $author->id,
                     'title' => $request->input('title'),
+                    'slug_url' => str_slug(time()."-".$request->input('title'), '-'),
                     'tag_line' => $request->input('tag_line'),
                     'category' => $request->input('category'),
-                    'file_type' => $request->input('file_type'),
-                    'requirements' => $request->input('requirements'),
+                    'file_type' => implode(", ", $request->file_type),
+                    'requirements' => implode(", ", $request->requirements),
                     'tag' => $request->input('tag'),
                     'description' => $request->input('description'),
                     'status' => 1,  // status = 1: approved, 2: draft, 3: banned
-                    'viewer' => 1  
+                    'viewer' => 1,
+                    'free' => 0    
                 ];
 
                  // Cover Image 
@@ -369,7 +533,7 @@ class AccountController extends Controller
                } 
             
         }
-        return view('author/product/add', compact('category'));
+        return view('author/product/add', compact('category', 'file_type'));
     }
 
     public function delete_product(Request $request, $id){
@@ -434,6 +598,7 @@ class AccountController extends Controller
 
         $product = DB::table('author_product')->where('id', $id)->first();  
         $category = DB::table('product_categories')->orderBy('id', 'dsc')->get();
+        $file_type = DB::table('product_file_type')->orderBy('id', 'dsc')->get();
 
         if ($product){
            if ($author->id != $product->author_id){
@@ -446,10 +611,10 @@ class AccountController extends Controller
 
                 $validator = Validator::make($request->all(), [
                     'title' => 'required|max:200',
-                    'cover_image' => 'image|mimes:jpg,png',
+                    'cover_image' => 'image|mimes:jpeg,jpg,png',
                     'zip_file' => 'mimes:zip',
-                    'file_type' => 'required|max:200',
-                    'requirements' => 'required|max:500',
+                    'file_type' => 'max:200',
+                    'requirements' => 'max:500',
                     'description' => 'required|max:2000',
                 ]);
 
@@ -460,14 +625,21 @@ class AccountController extends Controller
 
                 $update = [
                     'title' => $request->input('title'),
-                    // 'slug_url' => str_slug(time()."-".$request->input('title'), '-'),
                     'tag_line' => $request->input('tag_line'),
                     'category' => $request->input('category'),
-                    'file_type' => $request->input('file_type'),
-                    'requirements' => $request->input('requirements'),
                     'tag' => $request->input('tag'),
                     'description' => $request->input('description'),
+                    'updated_at' => date('Y-m-d H:i:s')
                 ];
+
+
+                if ($request->input('file_type')){
+                    $update['file_type'] = implode(", ", $request->file_type);
+                }
+
+                if ($request->input('requirements')){
+                    $update['requirements'] = implode(", ", $request->requirements);
+                }
 
                 if ($request->file('cover_image')){
                     // Cover Image 
@@ -526,7 +698,7 @@ class AccountController extends Controller
             } 
         
 
-        return view('author/product/edit', compact('product', 'category'));
+        return view('author/product/edit', compact('product', 'category', 'file_type'));
 
 
     }

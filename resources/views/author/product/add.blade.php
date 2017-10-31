@@ -15,6 +15,9 @@
 <link href="{{ asset('assets/customer/css/main.css') }}" rel="stylesheet">
 <link href="{{ asset('assets/customer/css/bootstrap-tagsinput.css') }}" rel="stylesheet">
 
+<!-- Bootstrap Select-->
+<link rel="stylesheet" href="https://cdn.rawgit.com/infostreams/bootstrap-select/fd227d46de2afed300d97fd0962de80fa71afb3b/dist/css/bootstrap-select.min.css" />
+
 </head>
 </body>
     <div class="wrapper">
@@ -189,17 +192,27 @@
 			<div class="col-md-6">
 				<div class="form-group form-row">
 					<label class="control-label Field" for="file_type">
-					File Type <span class="asteriskField">*</span></label>
+					File Type <span class="asteriskField">*</span></label><br>
 
-					<input class="form-control" id="file_type" name="file_type" type="text" required>
+					 <select class="selectpicker  show-tick" data-live-search="true" multiple name="file_type[]">
+	                    @foreach ($file_type as $data)
+	                    <option value="{{ $data->name_file_type }}">{{ $data->name_file_type }}</option>
+	                    @endforeach
+	                  </select>
+
 				</div>
 			</div>
 
 			<div class="col-md-6">
 				<div class="form-group form-row">
 					<label class="control-label Field" for="requirements">
-					Requirements <span class="asteriskField">*</span></label>
-					<input class="form-control" id="requirements" name="requirements" type="text" required>
+					Requirements <span class="asteriskField">*</span></label><br>
+					<select class="selectpicker show-tick" data-live-search="true" multiple name="requirements[]">
+                      <option value="Adobe Photoshop">Adobe Photoshop</option>
+                      <option value="Adobe Illustrator">Adobe Illustrator</option>
+                      <option value="Adobe Lightroom">Adobe Lightroom</option>
+                      <option value="Sketch">Sketch</option>
+                   </select>
 				</div>
 
 			</div>
@@ -321,6 +334,7 @@
     <script src="{{ asset('assets/customer/js/bootstrap.min.js') }}"></script>
     <script src="{{ asset('assets/customer/js/owl.carousel.js') }}"></script>
     <script src="{{ asset('assets/admin/ckeditor/ckeditor.js') }}" ></script>
+    <script src="https://cdn.rawgit.com/infostreams/bootstrap-select/fd227d46de2afed300d97fd0962de80fa71afb3b/dist/js/bootstrap-select.min.js"></script>
 
     <script type="text/javascript">
     $(document).ready(function() {

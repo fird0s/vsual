@@ -21,6 +21,9 @@
 <!-- Magnific-Popup -->
 <link href="{{ asset('assets/Magnific-Popup/dist/magnific-popup.css') }}" rel="stylesheet">
 
+<!-- Bootstrap Select-->
+<link rel="stylesheet" href="https://cdn.rawgit.com/infostreams/bootstrap-select/fd227d46de2afed300d97fd0962de80fa71afb3b/dist/css/bootstrap-select.min.css" />
+
 <style type="text/css">
 	.fotorama__caption {
 		text-align: center;
@@ -241,22 +244,32 @@
 		<div class="row">
 			<div class="col-md-6">
 				<div class="form-group form-row">
-					<label class="control-label requiredField" for="file_type">
-					File Type <span class="asteriskField">*</span></label>
+					<label class="control-label Field" for="file_type">
+					File Type <span class="asteriskField">*</span></label><br>
 
-					<input class="form-control" id="file_type" name="file_type" type="text" value="{{ $product->file_type }}" required>
+					 <select class="selectpicker  show-tick" data-live-search="true" multiple name="file_type[]" title="{{ $product->file_type }}">
+	                    @foreach ($file_type as $data)
+	                    <option value="{{ $data->name_file_type }}">{{ $data->name_file_type }}</option>
+	                    @endforeach
+	                  </select>
+
 				</div>
 			</div>
 
 			<div class="col-md-6">
 				<div class="form-group form-row">
-					<label class="control-label requiredField" for="requirements">
-					Requirements <span class="asteriskField">*</span></label>
-					<input class="form-control" id="requirements" name="requirements" type="text" value="{{ $product->requirements }}" required>
+					<label class="control-label Field" for="requirements">
+					Requirements <span class="asteriskField">*</span></label><br>
+					<select class="selectpicker show-tick" data-live-search="true" multiple name="requirements[]" title="{{ $product->requirements }}">
+                      <option value="Adobe Photoshop">Adobe Photoshop</option>
+                      <option value="Adobe Illustrator">Adobe Illustrator</option>
+                      <option value="Adobe Lightroom">Adobe Lightroom</option>
+                      <option value="Sketch">Sketch</option>
+                   </select>
 				</div>
 
 			</div>
-		</div>	
+		</div>		
 
 		<!-- tag -->
 		<div class="form-group form-row">
@@ -377,6 +390,7 @@
 
     <!-- Magnific-Popup -->
 	<script src="{{ asset('assets/Magnific-Popup/dist/jquery.magnific-popup.min.js') }}" ></script>    
+	<script src="https://cdn.rawgit.com/infostreams/bootstrap-select/fd227d46de2afed300d97fd0962de80fa71afb3b/dist/js/bootstrap-select.min.js"></script>
 
     <script type="text/javascript">
     

@@ -169,9 +169,22 @@
                     <div class="payment-type"></div>
                     <div class="gap"></div>
 
-                    <div class="alert alert-info">
-                      <strong>Info!</strong> Your premium account will be active untill <br><b>{{ date("F d, Y", strtotime("$user_subscriber->started_time_stamp +1 month")) }}</b>.
-                    </div>
+                    @if(Auth::user())
+                        @if(Auth::user()->subscription_type == 2 || Auth::user()->subscription_type == 3)
+                        <div class="alert alert-info">
+                            <strong>Info!</strong> Your premium account will be active untill <br><b>{{ date("F d, Y", strtotime("$user_subscriber->started_time_stamp +1 month")) }}</b>.
+                        </div>
+                        @elseif (Auth::user()->subscription_type == 1)
+                        <div class="alert alert-info">
+                            <strong>Info!</strong> You are <b>free membership account</b> and you just can download free resources type in our website</b>.<br><br>
+                            <p>If you want subscribe as premium membership, please visit <a href="{{ route('subscriber_subscriptions') }}">subscription settings</a></p>
+                        </div>
+                        @endif
+
+                    @endif  
+
+
+
                     
                 </div>
         </div>

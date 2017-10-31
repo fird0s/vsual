@@ -12,6 +12,10 @@
 
 <!-- CSS Files -->
 <link href="{{ asset('assets/customer/css/main.css') }}" rel="stylesheet">
+
+<!-- Data Tables -->
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.10.15/datatables.min.css"/>
+
 </head>
 </body>
     <div class="wrapper">
@@ -89,55 +93,39 @@
           {{Session::get('error')}}
         </div>
         @endif	
-	<div class="col-md-6 col-sm-6 col-xs-12 padding-right">
-	<div class="formden_header">
-		<h3 class="v-title">Change Password</h3>
-	</div>
-	<div class="create-account">
+	<div class="">
 
-		<form method="POST" action="{{ route('author_change_pwd') }}" accept-charset="UTF-8">
-		<input type="hidden" name="_token" value="{{{ csrf_token() }}}" />
-
-			<div class="form-group form-row">
-				
-			<div class="form-group form-row">
-				<label class="control-label requiredField" for="password">
-					Current Password<span class="asteriskField">*</span>
-				</label>
-				<input class="form-control" id="password" name="current_password" type="password"/>
-							</div>
-
-			<!-- new password -->
-			<div class="form-group form-row">
-				<label class="control-label requiredField" for="password">
-					New Password<span class="asteriskField">*</span>
-				</label>
-				<input class="form-control" id="password-confirm" name="new_password" type="password"/>
-							</div>
-
-			<!-- Confirm password -->
-			<div class="form-group form-row">
-				<label class="control-label requiredField" for="password">
-					Re-New Password<span class="asteriskField">*</span>
-				</label>
-				<input class="form-control" id="password-confirm" name="re_new_password" type="password"/>
-							</div>
-
-			
-			<div class="form-group">
-
-				<div class="">
-					<button type="submit" class="btn btn-primary">
-						<i class="fa fa-btn fa-user"></i> Change Password
-					</button>
-				</div>
-			</div>
+	<ul class="nav nav-pills ">
+	  <li role="presentation" class="active"><a href="{{ route('author_report') }}">Downloads</a></li>
+	  <li role="presentation"><a href="{{ route('author_report_earnings') }}">Earnings</a></li>
+	  <li role="presentation"><a href="{{ route('author_report_withdrawal') }}">Withdrawal</a></li>
+	</ul>
+	<hr>
 
 
-		</form>
-	</div>
+	<table id="downloads" class="display" cellspacing="0" width="100%">
+          <thead>
+            <tr>
+              <th class="no-sort">Product</th>		
+           	  <th class="no-sort">Date Download</th>			 	
+              <th class="no-sort">Subscription Expired</th>
+              <th class="no-sort">User</th>
+            </tr>
+          </thead>
+	        <tbody>
+         	@foreach ($downloads as $data)		
+        	<tr>
+                <td>{{ str_limit($data->title, $limit = 50, $end = '...') }}</td>
+                <td>{{ date('F d, Y', strtotime($data->created_at)) }}</td>
+            	<td>{{ date('F d, Y', strtotime($data->subscription_ends_time_stamp)) }}</td>
+            	<td>{{ $data->name }}</td>
+          	</tr>
+          	@endforeach
+			</tbody>
+  	</table>
 
 	</div>
+	
 	
 	
 </main>
@@ -233,5 +221,17 @@
     <script src="{{ asset('assets/customer/js/jquery.min.js') }}"></script>
     <script src="{{ asset('assets/customer/js/bootstrap.min.js') }}"></script>
     <script src="{{ asset('assets/customer/js/owl.carousel.js') }}"></script>
+
+    <!-- Data Table Plugins -->
+    <script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.10.15/datatables.min.js"></script>
+
+    <script>
+    $(document).ready(function(){
+        $('#downloads').DataTable( {
+             
+        } );
+    });
+    </script>
+
 </body>
 </html>

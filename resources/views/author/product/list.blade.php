@@ -12,6 +12,9 @@
 <!-- CSS Files -->
 <link href="{{ asset('assets/customer/css/main.css') }}" rel="stylesheet">
 
+<!-- Data Tables -->
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.10.15/datatables.min.css"/>
+
 <style type="text/css">
 .btn-danger {
     color: #fff;
@@ -104,7 +107,7 @@
 	</div>
 	<div class="create-account">
 
-		<table class="table table-striped ">
+		<table class="table table-striped" id="list-products">
                 <thead>
                     <tr>
                         <th><b>Product</b></th>
@@ -116,12 +119,12 @@
                 <tbody>
                   @foreach ($products as $data)		
                   <tr>
-                     <td><a target="blank" href="">{{ $data->title }}</a></td>
+                     <td><a target="_blank" href="{{ route('view_product', ['slug_url' => $data->slug_url]) }}">{{ $data->title }}</a></td>
                      <td>{{ date('d F Y', strtotime($data->created_at)) }}</td>
                      <td class="center viewer_account">{{ $data->viewer }}</td>
                      <td class="actions center">
-                        <a href="{{ route('author_edit_product', ['id' => $data->id]) }}" data-toggle="tooltip" title="Change" class="btn btn-primary fa fa-gear" > edit</a>
-                        <a href="{{ route('author_delete_product', ['id' => $data->id]) }}" onclick="return confirm('Are you sure want to delete?');" data-toggle="tooltip" title="Delete"  class="btn btn-danger btn-mini fa fa-trash-o"> delete</a>
+                        <a href="{{ route('author_edit_product', ['id' => $data->id]) }}" data-toggle="tooltip" title="edit" class="btn btn-primary fa fa-gear" style="padding: 7px 10px;"> </a>
+                        <a href="{{ route('author_delete_product', ['id' => $data->id]) }}" onclick="return confirm('Are you sure want to delete?');" data-toggle="tooltip" title="delete"  class="btn btn-danger btn-mini fa fa-trash-o" style="padding: 7px 10px; color: white"> </a>
                       </td>
                   </tr>
                   @endforeach
@@ -226,5 +229,21 @@
     <script src="{{ asset('assets/customer/js/jquery.min.js') }}"></script>
     <script src="{{ asset('assets/customer/js/bootstrap.min.js') }}"></script>
     <script src="{{ asset('assets/customer/js/owl.carousel.js') }}"></script>
+
+    <!-- Data Table Plugins -->
+    <script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.10.15/datatables.min.js"></script>
+
+    <script>
+    $(document).ready(function(){
+        $('#list-products').DataTable( {
+             
+        } );
+    });
+
+    $(document).ready(function(){
+    $('[data-toggle="tooltip"]').tooltip(); 
+});
+    </script>
+
 </body>
 </html>

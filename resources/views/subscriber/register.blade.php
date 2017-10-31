@@ -103,12 +103,15 @@
             </div>
         @endif  
 
-        @if(Auth::user()->subscription_type == 2 || Auth::user()->subscription_type == 3)
-          <div class="alert alert-danger">
-            You cannot register because your premium account still active
-          </div>
-        @else
+        @if(Auth::user())
+            @if(Auth::user()->subscription_type == 2 || Auth::user()->subscription_type == 3)
+              <div class="alert alert-danger">
+                You cannot register because your premium account still active
+              </div>
+            @else
+            @endif  
         @endif  
+        
     <div class="col-md-6 col-sm-6 col-xs-12 padding-right">
     <div class="formden_header">
         <h3 class="v-title">Membership Account Registration</h3>
@@ -151,7 +154,6 @@
                  <select class="form-control" name="package">
                     <option value="1">Free (Limited Download)</option>
                     <option value="2">Monthly - $9</option>
-                    <option value="3">Yearly --- $72</option>
                 </select>               
              </div>
 

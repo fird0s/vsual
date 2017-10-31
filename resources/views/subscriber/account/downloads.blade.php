@@ -12,6 +12,10 @@
 <!-- CSS Files -->
 <link href="{{ asset('assets/customer/css/main.css') }}" rel="stylesheet">
 
+<!-- Data Tables -->
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.10.15/datatables.min.css"/>
+
+
 
 </head>
 </body>
@@ -107,21 +111,23 @@
     </div>
     <div class="create-account">
 
-        <table class="table table-striped">
+        <table class="table table-striped" id="downloads-history">
             <thead>
                 <tr>
-                    <th width="20%"><b>Date</b></th>
                     <th width="60%"><b>Title</b></th>
-                    <th width="200%"><b>Category</b></th>
+                    <th width="20%"><b>Category</b></th>
+                    <th width="20%"><b>Date</b></th>
+
                 </tr>
             </thead>
             <tbody>
               @foreach ($downloads as $data)     
               <tr>
                 
+                 <td><a target="_blank" href="{{ route('view_product', ['slug_url' => $data->slug_url]) }}">{{ str_limit($data->title, $limit = 70, $end = '...') }}</a></td>
+                 <td><a href="{{ route('category', ['category_slug' => $data->slug_name]) }}">{{ $data->name }}</a></td>
                  <td>{{ date("F d, Y", strtotime("$data->created_at")) }}</td>
-                 <td><a target="_blank" href="{{ route('view_product', ['slug_url' => $data->slug_url]) }}">{{ $data->title }}</a></td>
-                 <td>{{ $data->name }}</td>
+
                 
               </tr>
               @endforeach
@@ -235,5 +241,17 @@
     <script src="{{ asset('assets/customer/js/jquery.min.js') }}"></script>
     <script src="{{ asset('assets/customer/js/bootstrap.min.js') }}"></script>
     <script src="{{ asset('assets/customer/js/owl.carousel.js') }}"></script>
+    
+    <!-- Data Table Plugins -->
+    <script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.10.15/datatables.min.js"></script>
+
+    <script>
+    $(document).ready(function(){
+        $('#downloads-history').DataTable( {
+             
+        } );
+    });
+    </script>
+
 </body>
 </html>
