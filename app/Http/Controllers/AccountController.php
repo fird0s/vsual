@@ -9,6 +9,7 @@ use DB;
 use Crypt;
 use Validator;
 use Illuminate\Support\Facades\Hash;
+use Newsletter;
 
 class AccountController extends Controller
 {
@@ -19,7 +20,21 @@ class AccountController extends Controller
      */
 
 
-    public function expired_subscription($id=NULL){
+    // this is how to subscribe to specific group
+    // 2def5ac0f6 = author 
+    // 4db167d066 = users
+    // 281538d14e = admin
+    // Newsletter::subscribeOrUpdate('firdauskoder@gmail.com', ['firstName'=>'Rince','lastName'=>'Wind'], 'subscribers', ['interests'=>['2def5ac0f6'=>true]]);
+
+
+    // subscribe to mailchimp
+    // Newsletter::subscribe('firdauskoder@gmail.com');
+
+    // change email
+    // Newsletter::updateEmailAddress('firdauskoder@gmail.com', 'firdaus@feb.unsyiah.ac.id');
+
+
+    public function expired_subscription($id){
         /**
             This function is to change user_subscription->status to 2. 
         **/
@@ -28,16 +43,16 @@ class AccountController extends Controller
         $now = date("Y-m-d");
 
         $subscription = DB::table('users_subscription')
-                        ->where('id', 7)
+                        ->where('id', $id)
                         ->first();
 
         if ($subscription){                
           $end_subscribtion = date("Y-m-d", strtotime($subscription->subscription_ends_time_stamp));
           if ($now > $end_subscribtion && $subscription->status == 1){
-              DB::table('users_subscription')->where('id', 7)->update([
+              DB::table('users_subscription')->where('id', $id)->update([
                   'status' => 2
                 ]);
-              return "change from ongoing to expired";
+              echo "change from ongoing to expired";
 
           // already calculated and runned calculate_revenue
           }elseif ($subscription->status == 3){
@@ -53,12 +68,12 @@ class AccountController extends Controller
 
     }
 
-    public function calculate_revenue($id=NULL){
+    public function calculate_revenue($id){
         /**
             This function to divided the user subscription with author revenue
         **/
 
-        $subscription = DB::table('users_subscription')->where('id', 7)->first();      
+        $subscription = DB::table('users_subscription')->where('id', $id)->first();      
         $now = date("Y-m-d");
         $end_subscribtion = date("Y-m-d", strtotime($subscription->subscription_ends_time_stamp));
         
@@ -94,7 +109,7 @@ class AccountController extends Controller
             }
 
             // to change users subscription status 3 (divided calculated to all author)
-            DB::table('users_subscription')->where('id', 7)->update([
+            DB::table('users_subscription')->where('id', $id)->update([
                 'status' => 3
             ]);
 
@@ -127,6 +142,7 @@ class AccountController extends Controller
             return redirect()->route('author_profile');
         }
 
+
         if ($request->isMethod('post')) {
 
             $validator = Validator::make($request->all(), [
@@ -151,6 +167,10 @@ class AccountController extends Controller
             ];
 
             $id = DB::table('author')->insertGetId($register);
+
+            // subscribe to mailchimp
+            Newsletter::subscribeOrUpdate($request->input('email'), ['FNAME'=> $request->input('name'),'lastName'=>''], 'subscribers', ['interests'=>['2def5ac0f6'=>true]]);
+
             $request->session()->flash('success', 'You have successfully registered please confirm your email');
             return redirect()->route('author_login');
 
@@ -366,6 +386,9 @@ class AccountController extends Controller
                   // session
                   $request->session()->forget('author');
                   $request->session()->put('author', $request->input('email'));
+
+                  Newsletter::subscribeOrUpdate($request->input('email'), ['FNAME'=>$request->input('name'),'lastName'=>''], 'subscribers', ['interests'=>['2def5ac0f6'=>true]]);
+
                   $request->session()->flash('success', 'Your profile updated successfully ');
                   return redirect()->route('author_profile');
                 } catch(\Illuminate\Database\QueryException $ex){

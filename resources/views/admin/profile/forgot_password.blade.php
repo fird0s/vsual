@@ -96,16 +96,18 @@
         <!-- Please do not remove the backlink to us unless you support further theme's development at https://bootstrapious.com/donate. It is part of the license conditions. Thank you for understanding :)-->
       </div>
     </div>
+    
     <!-- Javascript files-->
-      <!-- Javascript files-->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
-    <script src="http://conference.ccmanager.pl/static/js/tether.min.js"></script>
-    <script src="http://conference.ccmanager.pl/static/js/bootstrap.min.js"></script>
-    <script src="http://conference.ccmanager.pl/static/js/jquery.cookie.js"> </script>
-    <script src="http://conference.ccmanager.pl/static/js/jquery.validate.min.js"></script>
+    <script src="{{ asset('assets/administrator/js/tether.min.js') }}"></script>
+    <script src="{{ asset('assets/administrator/js/bootstrap.min.js') }}"></script>
+    <script src="{{ asset('assets/administrator/js/jquery.cookie.js') }}"> </script>
+    <script src="{{ asset('assets/administrator/js/jquery.validate.min.js') }}"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js"></script>
-    <script src="http://conference.ccmanager.pl/static/js/charts-home.js"></script>
-    <script src="http://conference.ccmanager.pl/static/js/front.js"></script>
+    <script src="{{ asset('assets/administrator/js/charts-home.js') }}"></script>
+    <script src="{{ asset('assets/administrator/js/front.js') }}"></script>
+    
+
     
     <!-- Google Analytics: change UA-XXXXX-X to be your site's ID.-->
     <!---->

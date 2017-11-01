@@ -174,55 +174,6 @@
 
                 </div>
 
-                <div class="content-related">
-                    <div class="row">
-                        <div class="col-md-12">
-                            <h3>You might also like</h3>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="product-item">
-                                <figure class="product-thumb">
-                                    <a href="#">
-                                            <img src="">
-                                    </a>
-                                </figure>
-                                <div class="product-body">
-                                    <div class="product-title">
-                                        <a href="#">Wine Packaging Mockups</a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="product-item">
-                                <figure class="product-thumb">
-                                    <a href="#">
-                                            <img src="">
-                                    </a>
-                                </figure>
-                                <div class="product-body">
-                                    <div class="product-title">
-                                        <a href="#">Wine Packaging Mockups</a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="product-item">
-                                <figure class="product-thumb">
-                                    <a href="#">
-                                            <img src="">
-                                    </a>
-                                </figure>
-                                <div class="product-body">
-                                    <div class="product-title">
-                                        <a href="#">Wine Packaging Mockups</a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div><!-- .content-related -->
 
             </div>
 

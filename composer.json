@@ -7,11 +7,12 @@
     "require": {
         "php": ">=5.6.4",
         "aws/aws-sdk-php-laravel": "~3.0",
+        "guzzlehttp/guzzle": "~5.2",
         "laravel/framework": "5.4.*",
         "laravel/tinker": "~1.0",
         "league/flysystem-aws-s3-v3": "~1.0",
-        "guzzlehttp/guzzle": "~5.2",
-        "paypal/rest-api-sdk-php": "*"
+        "paypal/rest-api-sdk-php": "*",
+        "spatie/laravel-newsletter": "^3.7"
     },
     "require-dev": {
         "fzaninotto/faker": "~1.4",

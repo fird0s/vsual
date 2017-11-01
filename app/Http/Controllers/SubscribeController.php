@@ -24,6 +24,7 @@ use Session;
 use DB;
 use Validator;
 use Mail;
+use Newsletter;
 
 class SubscribeController extends Controller
 {
@@ -174,6 +175,10 @@ class SubscribeController extends Controller
                 
                 // session for user
                 $user = Auth::loginUsingId($id);
+
+                // subscribe to mailchimp 
+                Newsletter::subscribeOrUpdate($request->input('email'), ['FNAME'=>$request->input('name'),'lastName'=>''], 'subscribers', ['interests'=>['4db167d066'=>true]]);
+
                 $request->session()->flash('success', 'Hi, thank you for register, please verify your email address');
                 return redirect()->route('subscriber_account');
 
@@ -290,8 +295,11 @@ class SubscribeController extends Controller
                 $update['password'] = Hash::make($request->input('password'));
             }
 
-
             DB::table('users')->where('email', $user->email)->update($update);
+            
+            // subscribe to mailchimp 
+            Newsletter::subscribeOrUpdate($request->input('email'), ['FNAME'=>$request->input('name'),'lastName'=>''], 'subscribers', ['interests'=>['4db167d066'=>true]]);
+
             $request->session()->flash('success', 'Your profile edited successfully');
             return redirect()->route('subscriber_account');
          }   

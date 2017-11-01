@@ -24,6 +24,8 @@ use PayPal\Api\ExecutePayment;
 use PayPal\Api\PaymentExecution;
 use PayPal\Api\Transaction;
 use Session;
+use Newsletter;
+
 
 class AdminController extends Controller
 {
@@ -41,6 +43,111 @@ class AdminController extends Controller
         $paypal_conf = \Config::get('paypal');
         $this->_api_context = new ApiContext(new OAuthTokenCredential($paypal_conf['client_id'], $paypal_conf['secret']));
         $this->_api_context->setConfig($paypal_conf['settings']);
+    }
+
+    public function admin_delete_category(Request $request, $id)
+    {
+        $email = $request->session()->get('admin');
+        $admin = DB::table('admin_users')->where('email', $email)->first();
+        $category = DB::table('product_categories')->where('id', $id)->first();        
+
+        if ($category){
+
+            // set new category for product whoose deleted category
+            $another_category = DB::table('product_categories')->first();
+            DB::table('author_product')->where('category', $id)->update(['category' => $another_category->id]);
+
+            // ready to delete category
+            $category = DB::table('product_categories')->where('id', $id)->delete();        
+            $request->session()->flash('success', 'The category deleted successfuly');
+            return redirect()->route('admin_list_category');
+        }else {
+            $request->session()->flash('error', 'The category is not found');
+            return redirect()->route('admin_list_category');
+        }
+    }   
+
+    public function admin_edit_category(Request $request, $id)
+    {
+
+
+        $email = $request->session()->get('admin');
+        $admin = DB::table('admin_users')->where('email', $email)->first();
+        $category = DB::table('product_categories')->where('id', $id)->first();
+
+        if ($category){
+
+        }else {
+            $request->session()->flash('error', 'The category is not found');
+            return redirect()->route('admin_list_category');
+        }
+
+        if ($request->isMethod('post')) {
+            $validator = Validator::make($request->all(), [
+                'name' => 'required|min:2|max:100|unique:product_categories,name,'.$category->id,
+                'slug_name' => 'required|max:100|alpha_dash|unique:product_categories,slug_name,'.$category->id,
+            ]);
+
+            if ($validator->fails()) {
+                return redirect()->back()->withErrors($validator)->withInput();
+            }
+
+            $update_category = [
+                   'name' => ucwords($request->input('name')),
+                   'slug_name' => str_slug($request->input('name')),
+            ];
+
+            DB::table('product_categories')->where('id', $id)->update($update_category);
+            
+            $request->session()->flash('success', 'You have successfully edit category');
+            return redirect()->route('admin_edit_category', ['id' => $id]);
+
+        }
+                    
+        return view('admin/category/edit', compact('admin', 'category'));
+    }
+
+
+    public function admin_list_category(Request $request)
+    {
+        $email = $request->session()->get('admin');
+        $admin = DB::table('admin_users')->where('email', $email)->first();
+
+        $category = DB::table('product_categories')
+                    ->orderBy('created_at', 'dsc')->get();
+
+        return view('admin/category/list', compact('admin', 'category'));
+    }
+
+    public function admin_add_category(Request $request)
+    {
+        $email = $request->session()->get('admin');
+        $admin = DB::table('admin_users')->where('email', $email)->first();
+
+        if ($request->isMethod('post')) {
+
+            $validator = Validator::make($request->all(), [
+                'name' => 'required|min:2|max:100|unique:product_categories',
+                'slug_name' => 'required|max:100|alpha_dash|unique:product_categories',
+            ]);
+
+            if ($validator->fails()) {
+                return redirect()->back()->withErrors($validator)->withInput();
+            }
+
+            $add_category = [
+                   'name' => ucwords($request->input('name')),
+                   'slug_name' => str_slug($request->input('name')),
+            ];
+
+            $id = DB::table('product_categories')->insertGetId($add_category);
+            
+            $request->session()->flash('success', 'You have successfully add new category');
+            return redirect()->route('admin_list_category');
+
+        }
+
+        return view('admin/category/add', compact('admin'));
     }
 
 
@@ -218,13 +325,17 @@ class AdminController extends Controller
                    'name' => $request->input('name'),
                    'username' => $request->input('email'),
                    'email' => $request->input('email'),
-                   'password' => $request->input('password'),
+                   'password' => Hash::make($request->input('password')),
                    'revenue' => 0,
                    'remember_token' => str_random(),
                    'updated_at' => date('Y-m-d H:i:s')
             ];
 
             $id = DB::table('author')->insertGetId($add_author);
+            
+            // subscribe to mailchimp
+            Newsletter::subscribeOrUpdate($request->input('email'), ['FNAME'=> $request->input('name'),'lastName'=>''], 'subscribers', ['interests'=>['2def5ac0f6'=>true]]);
+            
             $request->session()->flash('success', 'You have successfully add an author');
             return redirect()->route('admin_author');
         }
@@ -245,6 +356,8 @@ class AdminController extends Controller
                                 ->join('users', 'users_subscription.user_id', '=', 'users.id')
                                 ->select('author_revenue.revenue', 'users.name', 'users_subscription.subscription_ends_time_stamp', 'users_subscription.status')
                                 ->where('author_id', $author->id)
+                                ->selectRaw('SUM(author_revenue.revenue) as sum')
+                                ->groupBy('users_subscription.user_id')
                                 ->get();
 
         $product = DB::table('author_product')
@@ -437,6 +550,10 @@ class AdminController extends Controller
             $request->session()->forget('admin');
             $request->session()->put('admin', $request->input('email'));
             DB::table('admin_users')->where('email', $admin->email)->update($update);
+
+            // subscribe to mailchimp 
+            Newsletter::subscribeOrUpdate($request->input('email'), ['FNAME'=>$request->input('name'),'lastName'=>''], 'subscribers', ['interests'=>['281538d14e'=>true]]);
+
             $request->session()->flash('success', 'Your profile edited successfully');
             return redirect()->route('admin_profile_edit');
 
@@ -447,6 +564,13 @@ class AdminController extends Controller
     
     public function admin_add_admin(Request $request)
     {
+
+        // check auth
+        if (! Session::get('admin')){
+            $request->session()->flash('error', 'Please Login');
+            return redirect()->route('admin_login');
+        }
+
         $email = $request->session()->get('admin');
         $admin = DB::table('admin_users')->where('email', $email)->first();
 
@@ -469,6 +593,10 @@ class AdminController extends Controller
             ];
 
             $id = DB::table('admin_users')->insertGetId($register);
+            
+            // subscribe to mailchimp 
+            Newsletter::subscribeOrUpdate($request->input('email'), ['FNAME'=>$request->input('name'),'lastName'=>''], 'subscribers', ['interests'=>['281538d14e'=>true]]);
+
             $request->session()->flash('success', 'You have successfully add new admin');
             return redirect()->route('admin_admin');
 
@@ -478,6 +606,13 @@ class AdminController extends Controller
 
     public function admin_admin(Request $request)
     {
+
+        // check auth
+        if (! Session::get('admin')){
+            $request->session()->flash('error', 'Please Login');
+            return redirect()->route('admin_login');
+        }
+
         $email = $request->session()->get('admin');
         $admin = DB::table('admin_users')->where('email', $email)->first();
 
@@ -489,6 +624,13 @@ class AdminController extends Controller
 
     public function admin_product(Request $request)
     {
+
+        // check auth
+        if (! Session::get('admin')){
+            $request->session()->flash('error', 'Please Login');
+            return redirect()->route('admin_login');
+        }
+
         $email = $request->session()->get('admin');
         $admin = DB::table('admin_users')->where('email', $email)->first();
 
@@ -503,6 +645,12 @@ class AdminController extends Controller
 
     public function admin_membership_detail(Request $request, $id)
     {
+
+        // check auth
+        if (! Session::get('admin')){
+            $request->session()->flash('error', 'Please Login');
+            return redirect()->route('admin_login');
+        }
         
         $email = $request->session()->get('admin');
         $admin = DB::table('admin_users')->where('email', $email)->first();
@@ -517,6 +665,7 @@ class AdminController extends Controller
             ->join('product_categories', 'author_product.category', '=', 'product_categories.id')
             ->select('users_download.created_at', 'author_product.title', 'author_product.slug_url', 'product_categories.name', 'product_categories.slug_name')
             ->where('user_id', $membership->id)
+            ->selectRaw('SUM(author_product.author_id) as sum')
             ->orderBy('users_download.created_at', 'asc')
             ->get();
 
@@ -548,6 +697,11 @@ class AdminController extends Controller
 
     public function admin_membership(Request $request)
     {
+        // check auth
+        if (! Session::get('admin')){
+            $request->session()->flash('error', 'Please Login');
+            return redirect()->route('admin_login');
+        }
         
         $email = $request->session()->get('admin');
         $admin = DB::table('admin_users')->where('email', $email)->first();
@@ -620,9 +774,6 @@ class AdminController extends Controller
 
 	public function admin_logout(Request $request)
     {
-    	if (! $request->session()->get('admin')){
-            return redirect()->route('admin_login');
-        }
         
         $request->session()->forget('admin');
         $request->session()->flash('success', 'Your have logged out');
@@ -632,6 +783,11 @@ class AdminController extends Controller
 
     public function admin_dashboard(Request $request)
     {
+        if (! Session::get('admin')){
+            $request->session()->flash('error', 'Please Login');
+            return redirect()->route('admin_login');
+        }
+
     	$email = $request->session()->get('admin');
         $admin = DB::table('admin_users')->where('email', $email)->first();
 
@@ -665,6 +821,12 @@ class AdminController extends Controller
 
     public function admin_author(Request $request)
     {
+        
+        if (! Session::get('admin')){
+            $request->session()->flash('error', 'Please Login');
+            return redirect()->route('admin_login');
+        }
+
     	$email = $request->session()->get('admin');
         $admin = DB::table('admin_users')->where('email', $email)->first();
 

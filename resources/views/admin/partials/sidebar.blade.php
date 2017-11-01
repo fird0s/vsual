@@ -18,7 +18,7 @@
 
             <li> 
               <a href="{{ route('admin_payment_request') }}"><i class="fa fa-credit-card">
-              </i>Payment Request</a>
+              </i>Payout Request</a>
             </li>
 
             <li> 
@@ -56,10 +56,24 @@
               </a>
           </ul>
 
+
+          <span class="heading">Category</span>
+          <ul class="list-unstyled">
+            <li> 
+              <a href="{{ route('admin_list_category') }}">
+                <i class="fa fa fa-tags"></i>Category
+              </a>
+            </li>
+            <li> 
+              <a href="{{ route('admin_add_category') }}">
+                <i class="fa fa-plus-circle"></i>Add Category
+              </a>
+          </ul>
+
           <span class="heading">Blog</span>
           <ul class="list-unstyled">
-            <li> <a href="http://conference.ccmanager.pl/index.php/administrator/paper"><i class="fa fa-sticky-note"></i>Post</a></li>
-            <li> <a href="http://conference.ccmanager.pl/index.php/administrator/add_paper"><i class="fa fa-pencil-square-o"></i>Add Post</a></li>
+            <li> <a href="#"><i class="fa fa-sticky-note"></i>Post</a></li>
+            <li> <a href="#"><i class="fa fa-pencil-square-o"></i>Add Post</a></li>
           </ul>
          
         </nav>

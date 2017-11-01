@@ -40,6 +40,12 @@ Route::match(['get', 'post'], '/admin/login', "AdminController@admin_login")->na
 
 
 
+Route::match(['get', 'post'], '/admin/category/delete/{id}', "AdminController@admin_delete_category")->name('admin_delete_category');
+Route::match(['get', 'post'], '/admin/category/edit/{id}', "AdminController@admin_edit_category")->name('admin_edit_category');
+Route::match(['get', 'post'], '/admin/category/add', "AdminController@admin_add_category")->name('admin_add_category');
+Route::match(['get', 'post'], '/admin/category', "AdminController@admin_list_category")->name('admin_list_category');
+
+
 // Index Route
 Route::match(['get', 'post'], '/', "HomeController@index")->name('home');
 Route::match(['get', 'post'], '/popular', "HomeController@product_popular")->name('product_popular');

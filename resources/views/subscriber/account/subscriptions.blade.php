@@ -110,9 +110,10 @@
         <table class="table table-striped">
             <thead>
                 <tr>
-                    <th width="20%"><b>Date</b></th>
-                    <th width="50%"><b>Type</b></th>
-                    <th width="20%"><b>Expired</b></th>
+                    <th width="20%"><b>Date Start</b></th>
+                    <th width="40%"><b>Type</b></th>
+                    <th width="30%"><b>Date Expired</b></th>
+                    <th width="20%"><b>Status</b></th>
                 </tr>
             </thead>
             <tbody>
@@ -122,12 +123,20 @@
                  <td>{{ date("F d, Y", strtotime("$data->started_time_stamp")) }}</td>
                  <td>Premium Subscription Monthly($9)</td>
                  <td>{{ date("F d, Y", strtotime("$data->started_time_stamp +1 month")) }}</td>
+                 @if ($data->status == 2 || $data->status == 3)
+                 <td>Expired</td>
+                 @else   
+                 <td>On Going</td>
+                 @endif
                 
               </tr>
               @endforeach
              </tbody>
-    </table>
+        </table>
 
+        @if (Auth::user()->subscription_id == 0)
+            <a href="{{ route('page_membership') }}" class="btn btn-default">Start Monthly ($9) Subscription</a>
+        @endif
 
 
     </div>

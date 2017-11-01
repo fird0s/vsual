@@ -180,6 +180,7 @@ return [
 
         // add by fird0s
         Aws\Laravel\AwsServiceProvider::class,
+        Spatie\Newsletter\NewsletterServiceProvider::class,
 
     ],
 
@@ -232,6 +233,7 @@ return [
 
         // add by fird0s
         'AWS' => Aws\Laravel\AwsFacade::class,
+        'Newsletter' => Spatie\Newsletter\NewsletterFacade::class,
 
     ],
 

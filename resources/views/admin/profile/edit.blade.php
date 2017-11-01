@@ -50,7 +50,7 @@
             <div class="navbar-holder d-flex align-items-center justify-content-between">
               <!-- Navbar Header-->
               <div class="navbar-header">
-                <!-- Navbar Brand --><a href="http://conference.ccmanager.pl/index.php/administrator/statistics" class="navbar-brand">
+                <!-- Navbar Brand --><a href="#" class="navbar-brand">
                   <div class="brand-text brand-big hidden-lg-down"><span>Administrator</strong></div>
                   <div class="brand-text brand-small"><strong>Admin</strong></div></a>
                 <!-- Toggle Button--><a id="toggle-btn" href="#" class="menu-btn active"><span></span><span></span><span></span></a>
@@ -188,13 +188,13 @@
     </div>
     <!-- Javascript files-->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
-    <script src="http://conference.ccmanager.pl/static/js/tether.min.js"></script>
-    <script src="http://conference.ccmanager.pl/static/js/bootstrap.min.js"></script>
-    <script src="http://conference.ccmanager.pl/static/js/jquery.cookie.js"> </script>
-    <script src="http://conference.ccmanager.pl/static/js/jquery.validate.min.js"></script>
+    <script src="{{ asset('assets/administrator/js/tether.min.js') }}"></script>
+    <script src="{{ asset('assets/administrator/js/bootstrap.min.js') }}"></script>
+    <script src="{{ asset('assets/administrator/js/jquery.cookie.js') }}"> </script>
+    <script src="{{ asset('assets/administrator/js/jquery.validate.min.js') }}"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.5.0/Chart.min.js"></script>
-    <script src="http://conference.ccmanager.pl/static/js/charts-home.js"></script>
-    <script src="http://conference.ccmanager.pl/static/js/front.js"></script>
+    <script src="{{ asset('assets/administrator/js/charts-home.js') }}"></script>
+    <script src="{{ asset('assets/administrator/js/front.js') }}"></script>
     
     <!-- Data Table Plugins -->
     <script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.10.15/datatables.min.js"></script>
