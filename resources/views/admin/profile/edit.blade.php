@@ -118,10 +118,12 @@
                         <div class="row">
                             <div class="col-md-5">
                                 <div class="avatar">
-                                    <img style="width: 100px;" src="{{ Storage::url('admin/profile/') }}{{ $admin->photo_profile}}" alt="..." class="img-responsive img-thumbnail">
-
+                                    @if ($admin->photo_profile)
+                                    <img style="width: 100px;" src="{{ Storage::url('admin/profile/') }}{{ $admin->photo_profile}}" alt="Photo Profile" class="img-responsive img-thumbnail">
+                                    @else
+                                    <img style="width: 100px;" src="{{ Storage::url('admin/profile/no_image_user.png') }}" alt="Photo Profile" class="img-responsive img-thumbnail">
+                                    @endif
                                     <label style="margin-left: 20px; margin-top: -3px; cursor:pointer" for="choose_file" class="btn btn-primary"><i class="fa fa-user-circle"></i> Change Profile</label>
-
                                     <input type="file" id="choose_file" name="photo_profile" class="btn btn-default" style="display:none;" accept="image/x-png, image/gif, image/jpeg" >
 
                                 </div>

@@ -143,7 +143,7 @@
             <div class="clear"></div>
 
              <div class="form-group">
-                Already have membership account ? <a href="{{ route('author_login') }}"><b>Sign In here</b></a>
+                Already have membership account? <a href="{{ route('author_login') }}"><b>Sign In</b></a>
              </div>
 
             <div class="form-group">

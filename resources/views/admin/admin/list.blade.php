@@ -134,8 +134,8 @@
                             <td>{{ $data->email }}</td>
                             <td>{{ date("M d, Y", strtotime("$data->created_at")) }}</td>
                             <td class="actions center">
-                               <a href="http://conference.ccmanager.pl/index.php/administrator/edit_participant/28" data-effect="mfp-move-from-top"  data-toggle="tooltip" title="edit admin"  class="btn btn-primary btn-mini"> edit</a>          
-                               <a href="http://conference.ccmanager.pl/index.php/administrator/delete_participant/28" onclick="return confirm('Are you sure deleted this participant?');" data-effect="mfp-move-from-top" data-toggle="tooltip" title="delete admin"  class="btn btn-danger btn-mini"> delete</a>          
+                               <a href="{{ route('admin_edit_admin', ['id' => $data->id]) }}" data-effect="mfp-move-from-top"  data-toggle="tooltip" title="edit admin"  class="btn btn-primary btn-mini"> edit</a>          
+                               <a href="{{ route('admin_delete_admin', ['id' => $data->id]) }}" onclick="return confirm('Are you sure deleted this account?');" data-toggle="tooltip" title="delete admin"  class="btn btn-danger btn-mini"> delete</a>          
                             </td>
                           </tr>
                           @endforeach  

@@ -89,10 +89,10 @@
                         </div>
 
 
-
-                        <div class="col-md-8 col-md-offset-4">
-                                Don't have Author Account ? <a href="{{ route('author_register') }}"><b>Sing Up here</b></a>
-                         </div>
+                         <div class="col-md-8 col-md-offset-4">
+                                <a href="{{ route('author_forgot_password') }}">Lost your password?</a><br>
+                                <a href="{{ route('author_register') }}">New here? Create an Account</a>
+                            </div>
 
                          <div class="clear"></div><br>
 

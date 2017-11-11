@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Input;
 use League\Flysystem\AwsS3v3\AwsS3Adapter;
 use DB;
 use Crypt;
@@ -19,13 +20,18 @@ use PayPal\Api\Item;
 use PayPal\Api\ItemList;
 use PayPal\Api\Payer;
 use PayPal\Api\Payment;
+use PayPal\Api\Payout;
+use PayPal\Api\PayoutSenderBatchHeader;
+use PayPal\Api\PayoutItem;
+use PayPal\Api\Currency;
 use PayPal\Api\RedirectUrls;
 use PayPal\Api\ExecutePayment;
 use PayPal\Api\PaymentExecution;
 use PayPal\Api\Transaction;
 use Session;
 use Newsletter;
-
+// 
+use Intervention\Image\Facades\Image;
 
 class AdminController extends Controller
 {
@@ -36,6 +42,8 @@ class AdminController extends Controller
      *
      * @return void
      */
+
+
     public function __construct()
     {
         
@@ -44,9 +52,145 @@ class AdminController extends Controller
         $this->_api_context = new ApiContext(new OAuthTokenCredential($paypal_conf['client_id'], $paypal_conf['secret']));
         $this->_api_context->setConfig($paypal_conf['settings']);
     }
+    
+    public function payout(Request $request){
+
+        // $json = '{ "batch_header": { "payout_batch_id": "65FTFSEQZKQN2", "batch_status": "SUCCESS", "time_created": "2017-11-11T03:07:23Z", "time_completed": "2017-11-11T03:07:27Z", "sender_batch_header": { "email_subject": "You have a Payout by Fird0ss", "sender_batch_id": "5a0669660d68e" }, "amount": { "currency": "USD", "value": "10.00" }, "fees": { "currency": "USD", "value": "0.25" } }, "items": [ { "payout_item_id": "QEXQMN3KN6AQW", "transaction_id": "907579789X122902H", "transaction_status": "UNCLAIMED", "payout_item_fee": { "currency": "USD", "value": "0.25" }, "payout_batch_id": "65FTFSEQZKQN2", "payout_item": { "amount": { "currency": "USD", "value": "10.00" }, "note": "Thanks for your patronage! fird0s", "receiver": "firdauskoder@gmail.com", "recipient_type": "EMAIL", "sender_item_id": "1510369638" }, "time_processed": "2017-11-11T03:07:26Z", "errors": { "name": "RECEIVER_UNCONFIRMED", "message": "Receiver is unconfirmed", "information_link": "https://developer.paypal.com/docs/api/payments.payouts-batch/#errors" }, "links": [ { "href": "https://api.sandbox.paypal.com/v1/payments/payouts-item/QEXQMN3KN6AQW", "rel": "item", "method": "GET" } ] } ], "links": [ { "href": "https://api.sandbox.paypal.com/v1/payments/payouts/65FTFSEQZKQN2", "rel": "self", "method": "GET" } ] }';
+        // $encode = json_decode($json);
+        // $item = $encode->items[0];
+
+
+        $payouts = new \PayPal\Api\Payout();
+        $senderBatchHeader = new \PayPal\Api\PayoutSenderBatchHeader();
+        $senderBatchHeader->setSenderBatchId(uniqid())
+                            ->setEmailSubject("Bro, you are payout");
+
+        $senderItem = new \PayPal\Api\PayoutItem();
+        $senderItem->setRecipientType('Email')
+            ->setNote('thanks for payout bro')
+            ->setReceiver('firdauskoder-buyer@gmail.com')
+            ->setSenderItemId(time())
+            ->setAmount(new \PayPal\Api\Currency('{
+                        "value":"10.0",
+                        "currency":"USD"
+                    }'));
+
+            
+        $payouts->setSenderBatchHeader($senderBatchHeader)
+                ->addItem($senderItem);
+
+        // ### Create Payout
+                
+        try {
+            $output = $payouts->createSynchronous($this->_api_context);
+            return "success";
+        } catch (Exception $e){
+            return $e;
+        } catch (PayPal\Exception\PayPalConnectionException $ex) {
+            // NOTE: PLEASE DO NOT USE RESULTPRINTER CLASS IN YOUR ORIGINAL CODE. FOR SAMPLE ONLY
+            return "error connection";
+        }
+
+
+    }
+
+    public function admin_delete_admin(Request $request, $id)
+    {
+        // check auth
+        if (! Session::get('admin')){
+            $request->session()->flash('error', 'Please Login');
+            return redirect()->route('admin_login');
+        }        
+
+        $admin = DB::table('admin_users')->where('id', $id)->first();
+
+        if ($admin){
+            if ($admin->email == Session::get('admin')){
+                $request->session()->forget('admin');               
+                $admin = DB::table('admin_users')->where('id', $id)->delete();        
+                $request->session()->flash('success', 'You have successfully deleted your account');
+                return redirect()->route('admin_login');
+            }else {
+                $admin = DB::table('admin_users')->where('id', $id)->delete();        
+                $request->session()->flash('success', 'You have successfully deleted admin account');
+                return redirect()->route('admin_admin');
+            }
+        }else {
+            $request->session()->flash('error', 'The account is not exist');
+            return redirect()->route('admin_admin');
+        }
+    }
+
+    public function admin_edit_Admin(Request $request, $id)
+    {
+
+        // check auth
+        if (! Session::get('admin')){
+            $request->session()->flash('error', 'Please Login');
+            return redirect()->route('admin_login');
+        }
+
+        $email = $request->session()->get('admin');
+        $admin = DB::table('admin_users')->where('email', $email)->first();
+        $edit_admin = DB::table('admin_users')->where('id', $id)->first();
+
+
+        if (! $edit_admin){
+            $request->session()->flash('error', 'The account is not exist');
+            return redirect()->route('admin_admin');
+        }
+
+        if ($request->isMethod('post')) {
+
+            $validator = Validator::make($request->all(), [
+                'name' => 'required|min:4|max:100',
+                'email' => 'required|email|max:100|unique:admin_users,email,'.$edit_admin->id,
+                'password' => 'max:100',
+            ]);
+
+            if ($validator->fails()) {
+                return redirect()->back()->withErrors($validator)->withInput();
+            }
+
+            $update_user = [
+                   'name' => $request->input('name'),
+                   'email' => $request->input('email'),
+            ];
+
+            if ($request->input('password')){
+                $update_user['password'] = Hash::make($request->input('password'));
+            }
+
+            DB::table('admin_users')->where('id', $id)->update($update_user);
+
+
+            if ($request->input('email') == Session::get('admin')){
+                $request->session()->forget('admin');
+                $request->session()->put('admin', $request->input('email'));
+            }
+
+            
+            // subscribe to mailchimp 
+            Newsletter::subscribeOrUpdate($request->input('email'), ['FNAME'=>$request->input('name'),'lastName'=>''], 'subscribers', ['interests'=>['281538d14e'=>true]]);
+
+            $request->session()->flash('success', 'You have successfully edit admin user');
+            return redirect()->route('admin_edit_admin', ['id' => $id]);
+
+        }
+        return view('admin/admin/edit', compact('admin', 'edit_admin'));
+    }
+
+
+    
 
     public function admin_delete_category(Request $request, $id)
     {
+        // check auth
+        if (! Session::get('admin')){
+            $request->session()->flash('error', 'Please Login');
+            return redirect()->route('admin_login');
+        }        
+
         $email = $request->session()->get('admin');
         $admin = DB::table('admin_users')->where('email', $email)->first();
         $category = DB::table('product_categories')->where('id', $id)->first();        
@@ -70,6 +214,11 @@ class AdminController extends Controller
     public function admin_edit_category(Request $request, $id)
     {
 
+        // check auth
+        if (! Session::get('admin')){
+            $request->session()->flash('error', 'Please Login');
+            return redirect()->route('admin_login');
+        }        
 
         $email = $request->session()->get('admin');
         $admin = DB::table('admin_users')->where('email', $email)->first();
@@ -110,6 +259,12 @@ class AdminController extends Controller
 
     public function admin_list_category(Request $request)
     {
+        // check auth
+        if (! Session::get('admin')){
+            $request->session()->flash('error', 'Please Login');
+            return redirect()->route('admin_login');
+        }        
+
         $email = $request->session()->get('admin');
         $admin = DB::table('admin_users')->where('email', $email)->first();
 
@@ -121,6 +276,12 @@ class AdminController extends Controller
 
     public function admin_add_category(Request $request)
     {
+        // check auth
+        if (! Session::get('admin')){
+            $request->session()->flash('error', 'Please Login');
+            return redirect()->route('admin_login');
+        }        
+
         $email = $request->session()->get('admin');
         $admin = DB::table('admin_users')->where('email', $email)->first();
 
@@ -151,8 +312,9 @@ class AdminController extends Controller
     }
 
 
-    public function admin_pay_request(Request $request, $id)
+    public function admin_payout_author(Request $request, $id)
     {
+
         $email = $request->session()->get('admin');
         $admin = DB::table('admin_users')->where('email', $email)->first();
 
@@ -171,70 +333,14 @@ class AdminController extends Controller
 
             if ($author_withdrawal->status == 1){
 
-                // payment with paypal
-
-                $payer = new Payer();
-                $payer->setPaymentMethod('paypal');
-              
-                $item = new Item();
-                $item->setName($author_withdrawal->name)// item name
-                  ->setCurrency('USD')
-                  ->setQuantity(1)
-                  ->setPrice($author_withdrawal->amount); // unit price
-                
-                // add item to list
-                $item_list = new ItemList();
-                $item_list->setItems([$item]);
-                
-                $amount = new Amount();
-                $amount->setCurrency('USD')
-                  ->setTotal($author_withdrawal->amount);
-                
-                $transaction = new Transaction();
-                $transaction->setAmount($amount)
-                  ->setItemList($item_list)
-                  ->setDescription('Author Withdraw');
-                
-                $redirect_urls = new RedirectUrls();
-
-                // Specify return & cancel URL
-                $redirect_urls->setReturnUrl(url('/admin/payment/status'))
-                  ->setCancelUrl(url('/admin/payment/status'));
-              
-                $payment = new Payment();
-                $payment->setIntent('Sale')
-                  ->setPayer($payer)
-                  ->setRedirectUrls($redirect_urls)
-                  ->setTransactions(array($transaction));
-              
-                try {
-                  $payment->create($this->_api_context);
-                } catch (\PayPal\Exception\PayPalConnectionException $ex) {
-                  return $ex;
-                  return redirect()->route('admin_payment_request');
-                }
-              
-                foreach ($payment->getLinks() as $link) {
-                  if ($link->getRel() == 'approval_url') {
-                    $redirect_url = $link->getHref();
-                    break;
-                  }
-                }
-              
-                // add payment ID to session
-                Session::put('admin_paypal_payment_id', $payment->getId());
-
-                // add author_withdrawal ID to session
-                Session::put('admin_paypal_author_withdrawal', $author_withdrawal->id);
-              
-                if (isset($redirect_url)) {
-                  // redirect to paypal
-                  return redirect($redirect_url);
-                }
-
-            // end payment with paypal
+            // payout with PayPal
+                $payouts = new \PayPal\Api\Payout();
+                $senderBatchHeader = new \PayPal\Api\PayoutSenderBatchHeader();
+                    
+            // end payout with PayPal
 
             }
+            
 
 
         } catch(Exception $e){
@@ -244,46 +350,6 @@ class AdminController extends Controller
 
 
     }
-
-    public function admin_payment_status(Request $request){
-        // Get the payment ID before session clear
-
-        $payment_id = Session::get('admin_paypal_payment_id');
-        $payment_request_id = Session::get('admin_paypal_author_withdrawal');
-
-        // clear the session payment ID
-        Session::forget('admin_paypal_payment_id');
-        Session::forget('admin_paypal_author_withdrawal');
-        
-        if (empty($request->input('PayerID')) || empty($request->input('token'))) {
-          $request->session()->flash('error', 'Your payment failed');
-          return redirect()->route('admin_pay_request');
-        }
-        
-        $payment = Payment::get($payment_id, $this->_api_context);
-        
-        // PaymentExecution object includes information necessary
-        // to execute a PayPal account payment.
-        // The payer_id is added to the request query parameters
-        // when the user is redirected from paypal back to your site
-        $execution = new PaymentExecution();
-        $execution->setPayerId($request->input('PayerID'));
-        
-        //Execute the payment
-        $result = $payment->execute($execution, $this->_api_context);
-        
-        if ($result->getState() == 'approved') { // payment made      
-           
-            // change users type to 2
-            DB::table('author_withdrawal')->where('id', $payment_request_id)->update([
-                'status' => 2,
-                'updated_at' => date('Y-m-d H:i:s')
-            ]);
-
-            $request->session()->flash('success', 'The author payment request has been processed successfully.');
-            return redirect()->route('admin_payment_request');
-        }
-    }    
 
     public function admin_payment_request(Request $request)
     {
@@ -305,6 +371,13 @@ class AdminController extends Controller
 
     public function admin_author_add(Request $request)
     {
+
+        // check auth
+        if (! Session::get('admin')){
+            $request->session()->flash('error', 'Please Login');
+            return redirect()->route('admin_login');
+        }        
+
         $email = $request->session()->get('admin');
         $admin = DB::table('admin_users')->where('email', $email)->first();
 
@@ -346,10 +419,20 @@ class AdminController extends Controller
     public function admin_author_detail(Request $request, $id)
     {
         
+        // check auth
+        if (! Session::get('admin')){
+            $request->session()->flash('error', 'Please Login');
+            return redirect()->route('admin_login');
+        }
+
         $email = $request->session()->get('admin');
         $admin = DB::table('admin_users')->where('email', $email)->first();
-
         $author = DB::table('author')->where('id', $id)->first();
+
+        if (! $author){
+            $request->session()->flash('error', 'The author is not exist');
+            return redirect()->route('admin_author');
+        }
 
         $author_revenue = DB::table('author_revenue')
                                 ->join('users_subscription', 'author_revenue.subscription_id', '=', 'users_subscription.id')
@@ -398,10 +481,24 @@ class AdminController extends Controller
 
     public function admin_edit_product(Request $request, $id)
     {
+
+        // check auth
+        if (! Session::get('admin')){
+            $request->session()->flash('error', 'Please Login');
+            return redirect()->route('admin_login');
+        }        
+
+
         $email = $request->session()->get('admin');
         $admin = DB::table('admin_users')->where('email', $email)->first();
 
         $product = DB::table('author_product')->where('id', $id)->first();        
+
+        if (! $product){
+            $request->session()->flash('error', 'The product is not exist');
+            return redirect()->route('admin_product');
+        }
+
         $category = DB::table('product_categories')->orderBy('id', 'dsc')->get();
         $file_type = DB::table('product_file_type')->orderBy('id', 'dsc')->get();
 
@@ -501,7 +598,15 @@ class AdminController extends Controller
 
     public function admin_profile_edit(Request $request)
     {
-        $request->session()->put("admin", "firdauskoder@gmail.com");
+
+
+        // check auth
+        if (! Session::get('admin')){
+            $request->session()->flash('error', 'Please Login');
+            return redirect()->route('admin_login');
+        }   
+
+
         $email = $request->session()->get('admin');
         $admin = DB::table('admin_users')->where('email', $email)->first();
 
@@ -519,31 +624,39 @@ class AdminController extends Controller
                 'updated_at' => date('Y-m-d H:i:s')
             ];
 
-            // change password
-            if (Hash::check($request->input('current_password'), $admin->password) && $request->input('new_password') && $request->input('re_new_password')){
-                $validator = Validator::make($request->all(), [
-                    'current_password' => 'required|max:100',
-                    'new_password' => 'required|min:6|max:100',
-                    're_new_password' => 'same:new_password',
-
-                ]);
-                $update['password'] = Hash::make($request->input('password'));
-            }else {
-                $request->session()->flash('error', 'Your current password wrong or invalid');
-                return redirect()->route('admin_profile_edit');
-            }
-
             // validation form
             if ($validator->fails()) {
                 return redirect()->back()->withErrors($validator)->withInput();
             }
 
+            // // change password
+            // if ($request->input('current_password') || $request->input('new_password') || $request->input('re_new_password')){
+
+            //     echo Hash::check($request->input('current_password'), $admin->password);
+
+            //     $validator = Validator::make($request->all(), [
+            //         'current_password' => 'required|max:100',
+            //         'new_password' => 'required|min:6|max:100',
+            //         're_new_password' => 'same:new_password',
+
+            //     ]);
+
+            //     $update['password'] = Hash::make($request->input('password'));
+
+                
+
+            // }
+    
+
             // upload photo profile
             if ($request->file('photo_profile')){ 
-                 $photo_profile = time()."-".$request->file('photo_profile')->getClientOriginalName();
+                $imagename = strtoupper(str_random(10)).".".$request->file('photo_profile')->clientExtension();
+                $file = Image::make(Input::file('photo_profile'))
+                                ->encode('jpg', $_ENV['IMAGE_PROFILE_COMPRESS'])
+                                ->stream()->detach();
                  Storage::disk('s3')->files();
-                 Storage::put('admin/profile/'.$photo_profile, file_get_contents($request->file('photo_profile')), 'public');
-                 $update['photo_profile']  = $photo_profile;
+                 Storage::put('admin/profile/'.$imagename, $file, 'public');
+                 $update['photo_profile']  = $imagename;
             }
 
 
@@ -562,8 +675,41 @@ class AdminController extends Controller
         return view('admin/profile/edit', compact('admin'));
     }
     
+
+    function random_string($length){
+        return substr(str_repeat(md5(rand()), ceil($length/32)), 0, $length);
+    }
+
+
     public function admin_add_admin(Request $request)
     {
+
+        
+
+        // foreach (range(0, 10000) as $number) {
+        //     $register = [
+        //            'name' => $this->random_string(10),
+        //            'email' => $this->random_string(10) . "@gmail.com",
+        //            'password' => $this->random_string(10) . "pwd",
+        //     ];
+
+        //     $id = DB::table('admin_users')->insertGetId($register);
+        //     echo $number;
+        //     echo "<br>";
+            
+        // }
+
+
+
+        // generator
+
+        // $register = [
+            //        'name' => $request->input('name'),
+            //        'email' => $request->input('email'),
+            //        'password' => $request->input('password'),
+            // ];
+
+            // $id = DB::table('admin_users')->insertGetId($register);
 
         // check auth
         if (! Session::get('admin')){
@@ -640,6 +786,9 @@ class AdminController extends Controller
                     ->select('author_product.viewer', 'author_product.id', 'author_product.slug_url', 'author_product.title', 'author_product.created_at', 'author.name', 'product_categories.name as category_name')
                     ->orderBy('author_product.created_at', 'dsc')->get();
 
+
+
+
         return view('admin/product/list', compact('admin', 'product'));
     }
 
@@ -656,6 +805,11 @@ class AdminController extends Controller
         $admin = DB::table('admin_users')->where('email', $email)->first();
 
         $membership = DB::table('users')->where('id', $id)->first();
+
+        if (! $membership){
+            $request->session()->flash('error', 'The membership account is not exist');
+            return redirect()->route('admin_membership');
+        }
 
 
         $subscription_history = DB::table('users_subscription')->where('user_id', $membership->id)->orderBy('created_at', 'dsc')->get();
@@ -747,6 +901,8 @@ class AdminController extends Controller
 
     public function admin_login(Request $request)
     {
+
+
         if ($request->session()->get('admin')){
             return redirect()->route('admin_dashboard');
         }

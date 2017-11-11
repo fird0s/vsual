@@ -1,6 +1,11 @@
  <nav class="side-navbar">
           <div class="sidebar-header d-flex align-items-center">
-            <div class="avatar"><img src="{{ Storage::url('admin/profile/') }}{{ $admin->photo_profile}}" alt="..." class="img-fluid rounded-circle"></div>
+            <div class="avatar">
+              @if ($admin->photo_profile)
+              <img src="{{ Storage::url('admin/profile/') }}{{ $admin->photo_profile}}" alt="Photo Profile" class="img-fluid rounded-circle"></div>
+              @else
+              <img src="{{ Storage::url('admin/profile/no_image_user.png') }}" alt="Photo Profile" class="img-fluid rounded-circle"></div>
+              @endif
             <div class="title">
               <h1 class="h4">{{ $admin->name }}</h1>
               <a href="{{ route('admin_profile_edit') }}">Profile</a>

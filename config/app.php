@@ -181,6 +181,7 @@ return [
         // add by fird0s
         Aws\Laravel\AwsServiceProvider::class,
         Spatie\Newsletter\NewsletterServiceProvider::class,
+        Intervention\Image\ImageServiceProvider::class,
 
     ],
 
@@ -234,6 +235,7 @@ return [
         // add by fird0s
         'AWS' => Aws\Laravel\AwsFacade::class,
         'Newsletter' => Spatie\Newsletter\NewsletterFacade::class,
+        'Image' => Intervention\Image\Facades\Image::class,
 
     ],
 

@@ -12,6 +12,8 @@
 */
 
 
+Route::match(['get', 'post'], '/admin/payout', "AdminController@payout")->name('payout');
+
 
 // Administrator
 Route::match(['get', 'post'], '/admin/author', "AdminController@admin_author")->name('admin_author');
@@ -30,6 +32,8 @@ Route::match(['get', 'post'], '/admin/membership/{id}', "AdminController@admin_m
 
 Route::match(['get', 'post'], '/admin/admin', "AdminController@admin_admin")->name('admin_admin');
 Route::match(['get', 'post'], '/admin/admin/add', "AdminController@admin_add_admin")->name('admin_add_admin');
+Route::match(['get', 'post'], '/admin/admin/edit/{id}', "AdminController@admin_edit_admin")->name('admin_edit_admin');
+Route::match(['get', 'post'], '/admin/admin/delete/{id}', "AdminController@admin_delete_admin")->name('admin_delete_admin');
 
 Route::match(['get', 'post'], '/admin/products', "AdminController@admin_product")->name('admin_product');
 Route::match(['get', 'post'], '/admin/product/edit/{id}', "AdminController@admin_edit_product")->name('admin_edit_product');
@@ -60,6 +64,8 @@ Route::match(['get', 'post'], '/download/{slug_url}', "HomeController@download")
 Route::match(['get', 'post'], '/author/', "AccountController@login")->name('author_login');
 Route::match(['get', 'post'], '/author/login', "AccountController@login")->name('author_login');
 Route::match(['get', 'post'], '/author/forgot_password', "AccountController@forgot_password")->name('author_forgot_password');
+Route::match(['get', 'post'], '/author/reset_password/{pwd}', "AccountController@reset_password")->name('author_reset_password');
+Route::match(['get', 'post'], '/author/verify_account/{token}', "AccountController@verify_account")->name('author_verify_account');
 
 Route::match(['get', 'post'], '/author/profile', "AccountController@profile")->name('author_profile');
 Route::match(['get', 'post'], '/author/change_password', "AccountController@change_pwd")->name('author_change_pwd');
@@ -96,5 +102,7 @@ Route::match(['get', 'post'], '/membership/account/downloads', "SubscribeControl
 Route::match(['get', 'post'], '/membership/login', "SubscribeController@login")->name('subscriber_login');
 Route::match(['get', 'post'], '/membership/logout', "SubscribeController@logout")->name('subscriber_logout');
 Route::match(['get', 'post'], '/membership/forgot_password', "SubscribeController@forgot_password")->name('subscriber_forgot_password');
+Route::match(['get', 'post'], '/membership/reset_password/{pwd}', "SubscribeController@reset_password")->name('subscriber_reset_password');
+Route::match(['get', 'post'], '/membership/verify_account/{token}', "SubscribeController@verify_account")->name('subscriber_verify_account');
 
 Auth::routes();

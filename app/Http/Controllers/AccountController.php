@@ -5,11 +5,15 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use League\Flysystem\AwsS3v3\AwsS3Adapter;
+use Illuminate\Support\Facades\Input;
 use DB;
 use Crypt;
 use Validator;
 use Illuminate\Support\Facades\Hash;
 use Newsletter;
+use Mail;
+// 
+use Intervention\Image\Facades\Image;
 
 class AccountController extends Controller
 {
@@ -33,6 +37,84 @@ class AccountController extends Controller
     // change email
     // Newsletter::updateEmailAddress('firdauskoder@gmail.com', 'firdaus@feb.unsyiah.ac.id');
 
+
+    public function reset_password(Request $request, $pwd){
+
+        $author = DB::table('author')->where('password', $pwd)->first();
+        if ($author){
+            if ($request->isMethod('post')) {
+
+                $validator = Validator::make($request->all(), [
+                    'new_password' => 'required|min:6|max:100',
+                    're_type_new_password' => 'required|same:new_password',
+                ]);
+
+                if ($validator->fails()) {
+                    return redirect()->back()->withErrors($validator)->withInput();
+                }
+
+                DB::table('author')->where('id', $author->id)->update([
+                    'password' => Hash::make($request->input('new_password'))
+                ]);
+
+                $request->session()->flash('success', 'Your new password changed successfully');
+                return redirect()->route('author_login');  
+
+            }
+
+        }else{
+            $request->session()->flash('error', 'Sorry, Password reset has expired. Please request a new one.');
+            return redirect()->route('author_login');  
+        }
+        return view('author/reset_password', compact('author'));        
+    }
+
+    public function forgot_password(Request $request){
+
+        if ($request->isMethod('post')) {
+
+            $validator = Validator::make($request->all(), [
+                'email' => 'required|email|max:100',
+            ]);
+
+            if ($validator->fails()) {
+                return redirect()->back()->withErrors($validator)->withInput();
+            }
+
+            $author = DB::table('author')->where('email', $request->input('email'))->first();
+            
+            if ($author){
+
+                $key = str_random(50);
+
+                DB::table('author')->where('id', $author->id)->update([
+                    'password' => $key
+                ]);
+
+                $name = $author->name;
+                $email = $author->email;
+                $link_reset = $url = route('author_reset_password', ['pwd' => $key]);
+
+                Mail::send('email.forgot_password', ['name' => $name, 'email' => $email, 'link_reset' => $link_reset], function ($message) use ($author)
+                {
+
+                    $message->from('no-reply@vsual.net', 'VSUAL DEALS');
+                    $message->to($author->email,'');
+                    $message->subject("Reset Your Account");
+                });
+
+                $request->session()->flash('success', 'Your password has been reset, please check your email.');
+                return redirect()->route('author_login');  
+
+            }else {
+                $request->session()->flash('error', 'Email cannot find on system');
+                return redirect()->route('author_forgot_password');
+            }
+
+        }        
+
+        return view('author/forgot_password');
+    }
 
     public function expired_subscription($id){
         /**
@@ -136,6 +218,23 @@ class AccountController extends Controller
       }
     }
 
+    public function verify_account(Request $request, $token){
+        $author = DB::table('author')->where('remember_token', $token)->first();
+        if ($author){
+
+            DB::table('author')->where('remember_token', $token)->update
+              ([
+                'verified' => 1
+              ]);
+
+            $request->session()->flash('success', 'Thank you for verify your account');
+            return redirect()->route('author_login');  
+        }else {
+            $request->session()->flash('error', 'The account is not found');
+            return redirect()->route('author_login');  
+        }
+    }        
+
     public function author_register(Request $request)
     {
         if ($request->session()->get('author')){
@@ -161,17 +260,27 @@ class AccountController extends Controller
                    'name' => $request->input('name'),
                    'username' => $request->input('username'),
                    'email' => $request->input('email'),
-                   'password' => $request->input('password'),
+                   'password' => Hash::make($request->input("password")),
                    'revenue' => 0,
+                   'verified' => 0,
                    'remember_token' => str_random()
             ];
 
-            $id = DB::table('author')->insertGetId($register);
+
+            // send email 
+            Mail::send('email.register', ['name' => $request->input('name'), 'link_verify' => route('author_verify_account', ['token' => $register['remember_token'] ]) ], function ($message) use ($register)
+            {
+
+                $message->from('no-reply@vsual.net', 'VSUAL DEALS');
+                $message->to($register['email'],'');
+                $message->subject("Welcome and Verify Your Account on VSUAL");
+            });
 
             // subscribe to mailchimp
             Newsletter::subscribeOrUpdate($request->input('email'), ['FNAME'=> $request->input('name'),'lastName'=>''], 'subscribers', ['interests'=>['2def5ac0f6'=>true]]);
+            $id = DB::table('author')->insertGetId($register);
 
-            $request->session()->flash('success', 'You have successfully registered please confirm your email');
+            $request->session()->flash('success', 'You have successfully registered, please confirm your email');
             return redirect()->route('author_login');
 
         }
@@ -248,6 +357,7 @@ class AccountController extends Controller
               ([
                     'revenue' => $author->revenue - $request->input('amount-partial-request')
               ]);
+              
               $request->session()->flash('success', 'Your request success, our team are reviewing your request');
               return redirect()->route('author_report_withdrawal_request');
             }else {
@@ -299,36 +409,6 @@ class AccountController extends Controller
         return view('author/report/withdrawal', compact('withdrawals'));
     }
 
-
-    public function forgot_password(Request $request)
-    {   
-        if ($request->isMethod('post')) {
-
-             $validator = Validator::make($request->all(), [
-                'email' => 'required|email|max:100',
-            ]);
-
-            if ($validator->fails()) {
-                return redirect()->back()->withErrors($validator)->withInput();
-            }
-
-            $author = DB::table('author')->where('email', $request->input('email'))->first();
-            
-            if ($author){
-
-                // send mail forgot password to user
-                  
-
-            }else {
-                $request->session()->flash('error', 'Email cannot find on the system');
-                return redirect()->route('author_forgot_password');
-            }
-
-        }        
-
-
-        return view('author/forgot_password');
-    }
 
     public function login(Request $request)
     {
@@ -471,7 +551,7 @@ class AccountController extends Controller
 
             $validator = Validator::make($request->all(), [
                 'title' => 'required|max:200',
-                'cover_image' => 'required|image|mimes:jpeg,jpg,png',
+                'cover_image' => 'required|image|mimes:jpeg,jpg,png|dimensions:min_width='.$_ENV['IMAGE_COVER_MIN_WIDTH'].', min_height='.$_ENV['IMAGE_COVER_MIN_HEIGHT'].', max_width='.$_ENV['IMAGE_COVER_MAX_WIDTH'].', max_height='.$_ENV['IMAGE_COVER_MAX_HEIGHT'].'',
                 'zip_file' => 'required|mimes:zip',
                 'file_type' => 'required|max:200',
                 'requirements' => 'required|max:200',
@@ -500,9 +580,9 @@ class AccountController extends Controller
                 ];
 
                  // Cover Image 
-                 $cover_image = time()."-".$request->file('cover_image')->getClientOriginalName();
-                 Storage::disk('s3')->files();
-                 Storage::put('cover_image/'.$cover_image, file_get_contents($request->file('cover_image')), 'public');
+                 $cover_image = strtoupper(str_random(20)).".".$request->file('cover_image')->clientExtension();
+                 $file_cover_image = Image::make(Input::file('cover_image'))->encode('jpg', $_ENV['IMAGE_COVER_COMPRESS'])->stream()->detach();
+                 Storage::put('cover_image/'.$cover_image, $file_cover_image, 'public');
                  $add['cover_image']  = $cover_image;
 
                  // Item Zip
@@ -634,7 +714,7 @@ class AccountController extends Controller
 
                 $validator = Validator::make($request->all(), [
                     'title' => 'required|max:200',
-                    'cover_image' => 'image|mimes:jpeg,jpg,png',
+                    'cover_image' => 'image|mimes:jpeg,jpg,png|dimensions:min_width='.$_ENV['IMAGE_COVER_MIN_WIDTH'].', min_height='.$_ENV['IMAGE_COVER_MIN_HEIGHT'].', max_width='.$_ENV['IMAGE_COVER_MAX_WIDTH'].', max_height='.$_ENV['IMAGE_COVER_MAX_HEIGHT'].'',
                     'zip_file' => 'mimes:zip',
                     'file_type' => 'max:200',
                     'requirements' => 'max:500',
@@ -666,11 +746,11 @@ class AccountController extends Controller
 
                 if ($request->file('cover_image')){
                     // Cover Image 
+                    $cover_image = strtoupper(str_random(20)).".".$request->file('cover_image')->clientExtension();
+                    $file_cover_image = Image::make(Input::file('cover_image'))->encode('jpg', $_ENV['IMAGE_COVER_COMPRESS'])->stream()->detach();
+                    Storage::put('cover_image/'.$cover_image, $file_cover_image, 'public');
                     Storage::disk('s3')->delete("cover_image/".$product->cover_image);
-                    $cover_image = time()."-".$request->file('cover_image')->getClientOriginalName();
                     $update['cover_image']  = $cover_image;
-                    Storage::put('cover_image/'.$cover_image, file_get_contents($request->file('cover_image')), 'public');
-
                 }
 
                 if ($request->file('zip_file')){

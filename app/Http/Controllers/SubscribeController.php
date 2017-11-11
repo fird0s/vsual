@@ -44,7 +44,57 @@ class SubscribeController extends Controller
         $this->_api_context->setConfig($paypal_conf['settings']);
     }
 
+
+    public function verify_account(Request $request, $token){
+        $user = DB::table('users')->where('remember_token', $token)->first();
+        if ($user){
+            DB::table('users')->where('remember_token', $token)->update
+            ([
+                'verified' => 1
+            ]);
+
+            $request->session()->flash('success', 'Thank you for verify your account');
+            $user = Auth::loginUsingId($user->id);  
+            return redirect()->route('subscriber_account');  
+        }else {
+            $request->session()->flash('error', 'The account is not found');
+            return redirect()->route('subscriber_login');  
+        }
+    }        
+
+    public function reset_password(Request $request, $pwd){
+
+        $user = DB::table('users')->where('password', $pwd)->first();
+        if ($user){
+            if ($request->isMethod('post')) {
+
+                $validator = Validator::make($request->all(), [
+                    'new_password' => 'required|min:6|max:100',
+                    're_type_new_password' => 'required|same:new_password',
+                ]);
+
+                if ($validator->fails()) {
+                    return redirect()->back()->withErrors($validator)->withInput();
+                }
+
+                DB::table('users')->where('id', $user->id)->update([
+                    'password' => Hash::make($request->input('new_password'))
+                ]);
+
+                $request->session()->flash('success', 'Your new password changed successfully');
+                return redirect()->route('subscriber_login');  
+
+            }
+
+        }else{
+            $request->session()->flash('error', 'Sorry, Password reset has expired. Please request a new one.');
+            return redirect()->route('subscriber_forgot_password');  
+        }
+        return view('subscriber/reset_password', compact('user'));        
+    }
+
     public function forgot_password(Request $request){
+
 
         if ($request->isMethod('post')) {
 
@@ -60,8 +110,26 @@ class SubscribeController extends Controller
             
             if ($user){
 
-                // send mail forgot password to user
-                  
+                $key = str_random(50);
+
+                DB::table('users')->where('id', $user->id)->update([
+                    'password' => $key
+                ]);
+
+                $name = $user->name;
+                $email = $user->email;
+                $link_reset = route('subscriber_reset_password', ['pwd' => $key]);
+
+                Mail::send('email.forgot_password', ['name' => $name, 'email' => $email, 'link_reset' => $link_reset], function ($message) use ($user)
+                {
+                    $message->from('no-reply@vsual.net', 'VSUAL DEALS');
+                    $message->subject("Reset Your Account");
+                    $message->to($user->email, '');
+
+                });
+
+                $request->session()->flash('success', 'Your password has been reset, please check your email.');
+                return redirect()->route('subscriber_login');  
 
             }else {
                 $request->session()->flash('error', 'Email cannot find on system');
@@ -139,6 +207,8 @@ class SubscribeController extends Controller
     }
 
 
+
+
     public function register(Request $request)
     {
         if (Auth::user()){
@@ -157,7 +227,7 @@ class SubscribeController extends Controller
             ]);
 
             if ($validator->fails()) {
-                return redirect('/membefrship/register')
+                return redirect('/membership/register')
                         ->withErrors($validator);
             } 
 
@@ -165,33 +235,51 @@ class SubscribeController extends Controller
             // if type user 1 (free membership)
             if($request->input('package') == 1){
 
-                $id = DB::table('users')->insertGetId([
+
+                $register = [
                     'name' => $request->input('name'),
                     'email' => $request->input('email'),
-                    'password' => $request->input('password'),
+                    'password' => Hash::make($request->input('password')),
                     'subscription_type' => 1,
                     'remember_token' => str_random()
-                ]);
-                
-                // session for user
-                $user = Auth::loginUsingId($id);
+                ];
 
                 // subscribe to mailchimp 
                 Newsletter::subscribeOrUpdate($request->input('email'), ['FNAME'=>$request->input('name'),'lastName'=>''], 'subscribers', ['interests'=>['4db167d066'=>true]]);
 
+                // send email 
+                Mail::send('email.register', ['name' => $request->input('name'), 'link_verify' => route('subscriber_verify_account', ['token' => $register['remember_token'] ]) ], function ($message) use ($register)
+                {
+                    $message->from('no-reply@vsual.net', 'VSUAL DEALS');
+                    $message->to($register['email'],'');
+                    $message->subject("Welcome and Verify Your Account on VSUAL");
+                });
+
+                // save to database
+                $id = DB::table('users')->insertGetId($register);
+
                 $request->session()->flash('success', 'Hi, thank you for register, please verify your email address');
-                return redirect()->route('subscriber_account');
+                return redirect()->route('subscriber_login');
 
             }
 
-
-            $id = DB::table('users')->insertGetId([
+            $register = [
                     'name' => $request->input('name'),
                     'email' => $request->input('email'),
-                    'password' => $request->input('password'),
+                    'password' => Hash::make($request->input('password')),
                     'subscription_type' => 1,
                     'remember_token' => str_random()
-            ]);
+            ];
+
+            $id = DB::table('users')->insertGetId($register);
+
+            // send email 
+            Mail::send('email.register', ['name' => $request->input('name'), 'link_verify' => route('subscriber_verify_account', ['token' => $register['remember_token'] ]) ], function ($message) use ($register)
+            {
+                $message->from('no-reply@vsual.net', 'VSUAL DEALS');
+                $message->to($register['email'],'');
+                $message->subject("Welcome and Verify Your Account on VSUAL");
+            });
 
             // session for user
             $user = Auth::loginUsingId($id);

@@ -103,10 +103,11 @@
 
     <div class="col-md-12 col-sm-6 col-xs-12 padding-right">
     <div class="formden_header">
-        <h3 class="v-title">Subscriptions History</h3>
+        <h3 class="v-title">Subscriptions History</h3><hr>
     </div>
     <div class="create-account">
 
+        @if (count($subscriptions) > 0)
         <table class="table table-striped">
             <thead>
                 <tr>
@@ -133,6 +134,7 @@
               @endforeach
              </tbody>
         </table>
+        @endif
 
         @if (Auth::user()->subscription_id == 0)
             <a href="{{ route('page_membership') }}" class="btn btn-default">Start Monthly ($9) Subscription</a>

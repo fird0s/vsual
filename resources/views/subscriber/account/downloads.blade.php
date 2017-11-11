@@ -107,7 +107,7 @@
 
     <div class="col-md-12 col-sm-6 col-xs-12 padding-right">
     <div class="formden_header">
-        <h3 class="v-title">Downloads History</h3>
+        <h3 class="v-title">Downloads History</h3><hr>
     </div>
     <div class="create-account">
 

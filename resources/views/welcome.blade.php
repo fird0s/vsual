@@ -97,7 +97,7 @@
                         <div class="product-item">
                           <figure class="product-thumb">
                             <a href="{{ route('view_product', ['slug_url' => $data->slug_url]) }}">
-                              <img src="{{ Storage::url('cover_image/') }}{{ $data->cover_image}}" style="height: 200px;">
+                              <img src="{{ Storage::url('cover_image/') }}{{ $data->cover_image}}" style="height: 200px; width: 100%;">
                             </a>
 
                           </figure>

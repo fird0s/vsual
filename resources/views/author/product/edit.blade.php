@@ -198,7 +198,7 @@
 				<div class="form-group form-row" style="border: 1px dotted gray; padding: 10px;">
 					<label class="control-label requiredField">
 					<b>Cover Image - Aspect Ration 3:2 - MIN: 1170x780 - MAX: 20MB (JPEG, PNG, SVG)</b> <span class="asteriskField">*</span></label>
-					<input type="file" name="cover_image">
+					<input type="file" name="cover_image" accept="image/*">
 				</div>
 			</div>
 
@@ -216,22 +216,22 @@
 			<label style="padding-left: 10px;"> <b>Preview Images - Aspect Ration 3:2 - MIN: 570x380 - MAX: 5MB (JPEG, PNG, SVG)</b>	 </label></br>
 			<div class="col-md-3">
 				<div class="form-group form-row">
-					<input type="file" name="preview_image_1" width="100%">
+					<input type="file" name="preview_image_1" width="100%" accept="image/*">
 				</div>
 			</div>
 			<div class="col-md-3">
 				<div class="form-group form-row">
-					<input type="file" name="preview_image_2" width="100%">
+					<input type="file" name="preview_image_2" width="100%" accept="image/*">
 				</div>
 			</div>
 			<div class="col-md-3">
 				<div class="form-group form-row">
-					<input type="file" name="preview_image_3" width="100%">
+					<input type="file" name="preview_image_3" width="100%" accept="image/*">
 				</div>
 			</div>
 			<div class="col-md-3">
 				<div class="form-group form-row">
-					<input type="file" name="preview_image_4" width="100%">
+					<input type="file" name="preview_image_4" width="100%" accept="image/*">
 				</div>
 			</div>
 		</div>		

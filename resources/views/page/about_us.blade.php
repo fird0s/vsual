@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title> About Us - {{ env('TITLE') }} </title>
+<title> About Us - {{ env('AUTHOR') }} </title>
 <meta name="author" content="{{ env('AUTHOR') }}">
 <meta name="description" content="{{ env('DESCRIPTION') }}">
 <meta name="keywords" content="{{ env('KEYWORD') }}">

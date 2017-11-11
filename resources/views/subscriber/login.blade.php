@@ -95,7 +95,8 @@
                             <label class="col-md-4 control-label"></label>
 
                             <div class="col-md-8">
-                                Don't have Membership Account ? <a href="{{ route('subscriber_register') }}"><b>Sing Up here</b></a>
+                                <a href="{{ route('subscriber_forgot_password') }}">Lost your password?</a><br>
+                                <a href="{{ route('subscriber_register') }}">New here? Create an Account</a>
                             </div>
                         </div>
                         
